@@ -6,7 +6,7 @@ execute:
   echo: true
 
 book:
-  title: "World Income Inequality"
+  title: "Inequality in World Income"
   author:
     - Jiazhen Wang (jw4692)
     - Xiaojiang Wu (xw3022)
