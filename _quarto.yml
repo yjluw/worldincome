@@ -6,11 +6,11 @@ execute:
   echo: true
 
 book:
-  title: "YOUR PROJECT TITLE"
+  title: "World Income Inequality"
   author:
-    - AUTHOR1 (UNI1)
-    - AUTHOR2 (UNI2)
-  repo-url: https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME
+    - Xiaojiang Wu (xw3022)
+    - Yijian Liu (yl5778)
+  repo-url: https://github.com/yjluw/worldincome
   date: today
   page-footer:
     right: |
