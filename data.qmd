@@ -1,5 +1,71 @@
 # Data
 
 ## Description
+The World Income Inequality Database (WIID) contains comprehensive information about income inequality for 201 countries and historical entities. The current version contains over 24,000 data points with observations from pre-1960s to 2022. The database combines data from various authoritative sources including:
+
+1. LIS Cross-National Data Center (Luxembourg Income Study)
+2. Eurostat
+3. Socio-Economic Database for Latin America and the Caribbean (SEDLAC)
+4. United Nations
+5. National statistical offices
+6. OECD
+7. World Bank's Poverty and Inequality Platform (PIP)
+8. Research studies
+9. Other international organizations
+
+The observations are distributed across time periods as follows:
+
+| Time span | Number of observations |
+|:----------|---------------------:|
+| Total observations | 24,367 |
+| Before 1960 | 311 |
+| 1960-69 | 714 |
+| 1970-79 | 946 |
+| 1980-89 | 1,651 |
+| 1990-99 | 3,758 |
+| 2000-09 | 6,764 |
+| 2010-19 | 8,753 |
+| 2020- | 1,470 |
+
+
+
 
 ## Missing value analysis
+To to understand data completeness and potential limitations for our analysis, we should examine the missing values in key variables:
+
+1. Inequality measures (Gini coefficient (`gini`), decile shares (`d1-d10`), quintile shares (`q1-q5`))
+2. Resource concepts (income vs. consumption)
+3. Geographic coverage
+4. Time period coverage
+5. Quality ratings of the observations
+Sure, here's a formatted version of the analysis in a Quarto document:
+
+
+## Analyzing Missing Values in the Dataset
+
+To understand the data completeness and potential limitations for our analysis,  we should examine the missing values in key variables:
+
+### Inequality Measures
+- Gini coefficient (`gini`)
+- Decile shares (`d1-d10`)
+- Quintile shares (`q1-q5`)
+These are important variables for understanding income and wealth distribution, so we should check for any missing values and the overall coverage.
+
+### Resource Concepts (Income vs. Consumption)
+- The variables `resource` and `resource_detailed` indicate whether the data represents income or consumption. 
+- We should check for any missing values or imbalance in coverage between income and consumption data.
+
+### Geographic Coverage
+- Variables like `country`, `c2`, `c3`, `region_un`, `region_wb` cover different ways of grouping the geographic regions.
+- Checking for missing values and understanding the geographic representation in the dataset is important.
+
+### Time Period Coverage
+- The `year` variable indicates the survey year, so we should examine the range and completeness of years covered.
+
+### Quality Ratings
+- The `quality` and `quality_score` variables provide quality assessments.
+- Checking for missing values and understanding the quality distribution is crucial.
+
+### Other Variables
+- `population`, `gdp`, `mean`, `median` are also important variables to check for missing data.
+- The `source`, `source_detailed`, `source_comments` variables provide information about the data source, which is useful to understand potential limitations.
