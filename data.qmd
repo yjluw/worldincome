@@ -1,40 +1,39 @@
 # Data
 
 ## 2.1 Technical description
-The World Income Inequality Database (WIID) contains comprehensive information about income inequality for 201 countries and historical entities. The current version contains over 24,000 data points with observations from pre-1960s to 2022. The database combines data from various authoritative sources including:
 
-1. LIS Cross-National Data Center (Luxembourg Income Study)
-2. Eurostat
-3. Socio-Economic Database for Latin America and the Caribbean (SEDLAC)
-4. United Nations
-5. National statistical offices
-6. OECD
-7. World Bank's Poverty and Inequality Platform (PIP)
-8. Research studies
-9. Other international organizations
+The World Income Inequality Database (WIID) contains information about income inequality for 201 countries. The current version released on 28 November 2023 contains over 24,000 data points with observations from pre-1960s to 2022. We plan to import this data by download the .xlse file from its website (https://www.wider.unu.edu/database/world-income-inequality-database-wiid). WIID will be regularly updated without a specific schedule. WIID combines informations from various authoritative sources including:
+
+(1) LIS Cross-National Data Center (Luxembourg Income Study)
+(2) Eurostat
+(3) Socio-Economic Database for Latin America and the Caribbean (SEDLAC)
+(4) United Nations
+(5) Household survey statistics obtained from national statistical offices of the corresponding countries
+(6) Organisation for Economic Co-operation and Development (OECD)
+(7) World Bank’s Poverty and Inequality Platform (PIP)
+(8) Research outputs such as journal articles
+(9) Other international organizations
 
 The observations are distributed across time periods as follows:
 
-| Time span | Number of observations |
-|:----------|---------------------:|
-| Total observations | 24,367 |
-| Before 1960 | 311 |
-| 1960-69 | 714 |
-| 1970-79 | 946 |
-| 1980-89 | 1,651 |
-| 1990-99 | 3,758 |
-| 2000-09 | 6,764 |
-| 2010-19 | 8,753 |
-| 2020- | 1,470 |
-
-
-
+| Time span          | Number of observations |
+|:-------------------|-----------------------:|
+| Total observations |                 24,367 |
+| Before 1960        |                    311 |
+| 1960-69            |                    714 |
+| 1970-79            |                    946 |
+| 1980-89            |                  1,651 |
+| 1990-99            |                  3,758 |
+| 2000-09            |                  6,764 |
+| 2010-19            |                  8,753 |
+| 2020-              |                  1,470 |
 
 ## 2.2 Missing value analysis
 
 We want to first look at the range of years for the data by country and by continent to see if we can observe any patterns.
 
 We observe that region `NA` only contains one contry `Turkiye`, so we decide to categorize it into `Europe`
+
 ```{r}
 library(readxl)
 library(ggplot2)
@@ -62,8 +61,8 @@ ggplot(data, aes(x = country, y = year, color = region_un)) +
        color = "Region")
 
 ```
-From the plot, we can observe that even though the data spans over 100 years, most records are concentrated between the 1950s and 2020s. We can also see that countries in Europe and America have the most frequent data recordings, with almost a data point for each year. Whereas for African countries, data are measured less frequently.
 
+From the plot, we can observe that even though the data spans over 100 years, most records are concentrated between the 1950s and 2020s. We can also see that countries in Europe and America have the most frequent data recordings, with almost a data point for each year. Whereas for African countries, data are measured less frequently.
 
 ```{r}
 #| fig.width: 8
@@ -74,10 +73,8 @@ Data |> mutate(total_missing = rowSums(is.na(Data))) |> group_by(country)|> muta
 
 ```
 
-From the plot facet by `region_un`, The missing data percentages vary significantly across different regions, with some regions having higher proportions of missing values. 
-In `Africa`,a wide range of missing percentages with some countries having very high percentages (close to 50% or more), which suggests potential challenges in data collection or reporting consistency in this region.
+From the plot facet by `region_un`, The missing data percentages vary significantly across different regions, with some regions having higher proportions of missing values. In `Africa`,a wide range of missing percentages with some countries having very high percentages (close to 50% or more), which suggests potential challenges in data collection or reporting consistency in this region.
 
 In `Asia`, countries generally have moderate to low missing data percentages, while a few countries have higher percentages.
 
-In `Americas` and `Europe`, lower percentage of countries contains high percentage of missing values while smaller countries and island nations have slightly higher missing percentages, which is consistent with the insight from the last graph where `Americas` and `Europe` has fewer challenges in data collection and report the data more frequently. 
-In `Oceania`, smaller amount of countries belong to this region and most of them have relatively lower missing percentages, which means data availability are better in this developed countries. 
+In `Americas` and `Europe`, lower percentage of countries contains high percentage of missing values while smaller countries and island nations have slightly higher missing percentages, which is consistent with the insight from the last graph where `Americas` and `Europe` has fewer challenges in data collection and report the data more frequently. In `Oceania`, smaller amount of countries belong to this region and most of them have relatively lower missing percentages, which means data availability are better in this developed countries.
