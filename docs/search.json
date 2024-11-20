@@ -4,7 +4,17 @@
     "href": "index.html",
     "title": "Inequality in World Income",
     "section": "",
-    "text": "1 Introduction\nIn an era of rapid globalization and technological advancement, world income inequality is becoming a more and more serious problem. The growing disparity between the wealthy and the poor, more than simply shaping economic outcomes, has profoundly influenced social mobility, educational opportunities, and political stability across nations. Using the comprehensive World Income Inequality Database (WIID) maintained by UNU-WIDER, which contains over 24,000 data points across 201 countries until the year 2022, our analysis aims to uncover patterns and trends in global income distribution. We are particularly interested in examining how income inequality has evolved over time and understanding the relationship between a country’s economic development and its income distribution. The fact that income inequality has been influential in poverty reduction, social cohesion, and sustainable development goals makes our investigation meaningful. By analyzing the data, we hope to provide insights into the drivers of income inequality and solutions to promote more equitable and inclusive societies.",
+    "text": "1 Introduction\nIn an era of rapid globalization and technological advancement, world income inequality is becoming a more and more serious problem. The growing disparity between the wealthy and the poor, more than simply shaping economic outcomes, has profoundly influenced social mobility, educational opportunities, and political stability across nations. For this project, we will be using the World Income Inequality Database maintained by the United Nations University World Institute, which contains over 24000 data points across 201 countries in over 40 years including measures like population, GDP and income. Our analysis aims to uncover patterns and trends in global income distribution. We are particularly interested in examining how income inequality has evolved over time and understanding the relationship between a country’s economic development and its income distribution. The fact that income inequality has been influential in poverty reduction, social cohesion, and sustainable development goals makes our investigation meaningful. By analyzing the data, we hope to provide insights into the drivers of income inequality and solutions to promote more equitable and inclusive societies.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Introduction</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#questions-interested",
+    "href": "index.html#questions-interested",
+    "title": "Inequality in World Income",
+    "section": "1.1 Questions Interested:",
+    "text": "1.1 Questions Interested:\n\nHow income inequality changes over time and across regions?\nWill economic growth increase or decrease income inequality?",
     "crumbs": [
       "<span class='chapter-number'>1</span>  <span class='chapter-title'>Introduction</span>"
     ]
@@ -14,24 +24,14 @@
     "href": "data.html",
     "title": "2  Data",
     "section": "",
-    "text": "2.1 Description\nThe World Income Inequality Database (WIID) contains comprehensive information about income inequality for 201 countries and historical entities. The current version contains over 24,000 data points with observations from pre-1960s to 2022. The database combines data from various authoritative sources including:\nThe observations are distributed across time periods as follows:",
+    "text": "2.1 2.1 Technical description\nThe World Income Inequality Database (WIID) contains comprehensive information about income inequality for 201 countries and historical entities. The current version contains over 24,000 data points with observations from pre-1960s to 2022. The database combines data from various authoritative sources including:\nThe observations are distributed across time periods as follows:",
     "crumbs": [
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Data</span>"
     ]
   },
   {
-    "objectID": "data.html#missing-value-analysis",
-    "href": "data.html#missing-value-analysis",
-    "title": "2  Data",
-    "section": "2.2 Missing value analysis",
-    "text": "2.2 Missing value analysis\nTo to understand data completeness and potential limitations for our analysis, we should examine the missing values in key variables:\n\nInequality measures (Gini coefficient (gini), decile shares (d1-d10), quintile shares (q1-q5))\nResource concepts (income vs. consumption)\nGeographic coverage\nTime period coverage\nQuality ratings of the observations Sure, here’s a formatted version of the analysis in a Quarto document:",
-    "crumbs": [
-      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Data</span>"
-    ]
-  },
-  {
-    "objectID": "data.html#description",
-    "href": "data.html#description",
+    "objectID": "data.html#technical-description",
+    "href": "data.html#technical-description",
     "title": "2  Data",
     "section": "",
     "text": "LIS Cross-National Data Center (Luxembourg Income Study)\nEurostat\nSocio-Economic Database for Latin America and the Caribbean (SEDLAC)\nUnited Nations\nNational statistical offices\nOECD\nWorld Bank’s Poverty and Inequality Platform (PIP)\nResearch studies\nOther international organizations\n\n\n\n\n\nTime span\nNumber of observations\n\n\n\n\nTotal observations\n24,367\n\n\nBefore 1960\n311\n\n\n1960-69\n714\n\n\n1970-79\n946\n\n\n1980-89\n1,651\n\n\n1990-99\n3,758\n\n\n2000-09\n6,764\n\n\n2010-19\n8,753\n\n\n2020-\n1,470",
@@ -40,21 +40,11 @@
     ]
   },
   {
-    "objectID": "data.html#missing-value-analysis-1",
-    "href": "data.html#missing-value-analysis-1",
+    "objectID": "data.html#missing-value-analysis",
+    "href": "data.html#missing-value-analysis",
     "title": "2  Data",
-    "section": "2.3 Missing value analysis",
-    "text": "2.3 Missing value analysis\nTo to understand data completeness and potential limitations for our analysis, we should examine the missing values in key variables:\n\nInequality measures (Gini coefficient (gini), decile shares (d1-d10), quintile shares (q1-q5))\nResource concepts (income vs. consumption)\nGeographic coverage\nTime period coverage\nQuality ratings of the observations",
-    "crumbs": [
-      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Data</span>"
-    ]
-  },
-  {
-    "objectID": "data.html#analyzing-missing-values-in-the-dataset",
-    "href": "data.html#analyzing-missing-values-in-the-dataset",
-    "title": "2  Data",
-    "section": "2.3 Analyzing Missing Values in the Dataset",
-    "text": "2.3 Analyzing Missing Values in the Dataset\nTo understand the data completeness and potential limitations for our analysis, we should examine the missing values in key variables:\n\n2.3.1 Inequality Measures\n\nGini coefficient (gini)\nDecile shares (d1-d10)\nQuintile shares (q1-q5) These are important variables for understanding income and wealth distribution, so we should check for any missing values and the overall coverage.\n\n\n\n2.3.2 Resource Concepts (Income vs. Consumption)\n\nThe variables resource and resource_detailed indicate whether the data represents income or consumption.\nWe should check for any missing values or imbalance in coverage between income and consumption data.\n\n\n\n2.3.3 Geographic Coverage\n\nVariables like country, c2, c3, region_un, region_wb cover different ways of grouping the geographic regions.\nChecking for missing values and understanding the geographic representation in the dataset is important.\n\n\n\n2.3.4 Time Period Coverage\n\nThe year variable indicates the survey year, so we should examine the range and completeness of years covered.\n\n\n\n2.3.5 Quality Ratings\n\nThe quality and quality_score variables provide quality assessments.\nChecking for missing values and understanding the quality distribution is crucial.\n\n\n\n2.3.6 Other Variables\n\npopulation, gdp, mean, median are also important variables to check for missing data.\nThe source, source_detailed, source_comments variables provide information about the data source, which is useful to understand potential limitations.",
+    "section": "2.2 2.2 Missing value analysis",
+    "text": "2.2 2.2 Missing value analysis\nWe want to first look at the range of years for the data by country and by continent to see if we can observe any patterns.\nWe observe that region NA only contains one contry Turkiye, so we decide to categorize it into Europe\n\n\nCode\nlibrary(readxl)\n\n\nWarning: package 'readxl' was built under R version 4.4.2\n\n\nCode\nlibrary(ggplot2)\nlibrary(tidyverse)\n\n\n── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.1.4     ✔ readr     2.1.5\n✔ forcats   1.0.0     ✔ stringr   1.5.1\n✔ lubridate 1.9.3     ✔ tibble    3.2.1\n✔ purrr     1.0.2     ✔ tidyr     1.3.1\n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors\n\n\nCode\ndata &lt;- read_excel(\"WIID_28NOV2023.xlsx\")\ndata &lt;- data |&gt;\n  mutate(region_un = ifelse(country == \"Turkiye\", \"Europe\", region_un))\n\n\n\n\nCode\ndata &lt;- data |&gt;\n  mutate(country = factor(country, levels = data |&gt;\n                            distinct(country, region_un) |&gt;\n                            arrange(region_un, country) |&gt;\n                            pull(country)))\n\n# Create the plot without connecting points and retaining multiple data points per country\nggplot(data, aes(x = country, y = year, color = region_un)) +\n  geom_point() +\n  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +\n  labs(title = \"Year Range of Data for Each Country\", \n       x = \"Country\", \n       y = \"Year\", \n       color = \"Region\")\n\n\n\n\n\n\n\n\n\nFrom the plot, we can observe that even though the data spans over 100 years, most records are concentrated between the 1950s and 2020s. We can also see that countries in Europe and America have the most frequent data recordings, with almost a data point for each year. Whereas for African countries, data are measured less frequently.\n\n\nCode\nData &lt;- read_xlsx(\"WIID_28NOV2023.xlsx\")\ncolnum &lt;- ncol(Data)\nData |&gt; mutate(total_missing = rowSums(is.na(Data))) |&gt; group_by(country)|&gt; mutate(rownum = n()) |&gt; ungroup() |&gt; group_by(region_un,country) |&gt; summarize(missing=sum(total_missing)/(unique(rownum)*colnum)) |&gt; ungroup() |&gt; mutate(region_un=if_else(country==\"Turkiye\",\"Europe\",region_un))|&gt; ggplot(aes(y=fct_reorder(country,missing),x=missing,fill=region_un))+geom_col()+theme(axis.text.y = element_text(size = 5)) +labs(x=\"Percentage of Missing \",y=\"Country\",title = \"Percentage of Missing per contry in different regions\") + facet_wrap(~region_un,ncol=1,scales = \"free_y\")\n\n\n`summarise()` has grouped output by 'region_un'. You can override using the\n`.groups` argument.\n\n\n\n\n\n\n\n\n\nFrom the plot facet by region_un, The missing data percentages vary significantly across different regions, with some regions having higher proportions of missing values. In Africa,a wide range of missing percentages with some countries having very high percentages (close to 50% or more), which suggests potential challenges in data collection or reporting consistency in this region.\nIn Asia, countries generally have moderate to low missing data percentages, while a few countries have higher percentages.\nIn Americas and Europe, lower percentage of countries contains high percentage of missing values while smaller countries and island nations have slightly higher missing percentages, which is consistent with the insight from the last graph where Americas and Europe has fewer challenges in data collection and report the data more frequently. In Oceania, smaller amount of countries belong to this region and most of them have relatively lower missing percentages, which means data availability are better in this developed countries.",
     "crumbs": [
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Data</span>"
     ]
