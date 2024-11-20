@@ -33,21 +33,23 @@ The observations are distributed across time periods as follows:
 ## 2.2 Missing value analysis
 
 We want to first look at the range of years for the data by country and by continent to see if we can observe any patterns.
+
+We observe that region `NA` only contains one contry `Turkiye`, so we decide to categorize it into `Europe`
 ```{r}
 library(readxl)
 library(ggplot2)
-library(tidyr)
+library(tidyverse)
 data <- read_excel("WIID_28NOV2023.xlsx")
-data <- data %>%
+data <- data |>
   mutate(region_un = ifelse(country == "Turkiye", "Europe", region_un))
 
 ```
 
 ```{r, fig.height=8, fig.width=18}
-data <- data %>%
-  mutate(country = factor(country, levels = data %>%
-                            distinct(country, region_un) %>%
-                            arrange(region_un, country) %>%
+data <- data |>
+  mutate(country = factor(country, levels = data |>
+                            distinct(country, region_un) |>
+                            arrange(region_un, country) |>
                             pull(country)))
 
 # Create the plot without connecting points and retaining multiple data points per country
@@ -61,3 +63,21 @@ ggplot(data, aes(x = country, y = year, color = region_un)) +
 
 ```
 From the plot, we can observe that even though the data spans over 100 years, most records are concentrated between the 1950s and 2020s. We can also see that countries in Europe and America have the most frequent data recordings, with almost a data point for each year. Whereas for African countries, data are measured less frequently.
+
+
+```{r}
+#| fig.width: 8
+#| fig.height: 18
+Data <- read_xlsx("WIID_28NOV2023.xlsx")
+colnum <- ncol(Data)
+Data |> mutate(total_missing = rowSums(is.na(Data))) |> group_by(country)|> mutate(rownum = n()) |> ungroup() |> group_by(region_un,country) |> summarize(missing=sum(total_missing)/(unique(rownum)*colnum)) |> ungroup() |> mutate(region_un=if_else(country=="Turkiye","Europe",region_un))|> ggplot(aes(y=fct_reorder(country,missing),x=missing,fill=region_un))+geom_col()+theme(axis.text.y = element_text(size = 5)) +labs(x="Percentage of Missing ",y="Country",title = "Percentage of Missing per contry in different regions") + facet_wrap(~region_un,ncol=1,scales = "free_y")
+
+```
+
+From the plot facet by `region_un`, The missing data percentages vary significantly across different regions, with some regions having higher proportions of missing values. 
+In `Africa`,a wide range of missing percentages with some countries having very high percentages (close to 50% or more), which suggests potential challenges in data collection or reporting consistency in this region.
+
+In `Asia`, countries generally have moderate to low missing data percentages, while a few countries have higher percentages.
+
+In `Americas` and `Europe`, lower percentage of countries contains high percentage of missing values while smaller countries and island nations have slightly higher missing percentages, which is consistent with the insight from the last graph where `Americas` and `Europe` has fewer challenges in data collection and report the data more frequently. 
+In `Oceania`, smaller amount of countries belong to this region and most of them have relatively lower missing percentages, which means data availability are better in this developed countries. 
