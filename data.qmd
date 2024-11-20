@@ -2,7 +2,9 @@
 
 ## 2.1 Technical description
 
-The World Income Inequality Database (WIID) contains information about income inequality for 201 countries. The current version released on 28 November 2023 contains over 24,000 data points with observations from pre-1960s to 2022. We plan to import this data by download the .xlse file from its website (https://www.wider.unu.edu/database/world-income-inequality-database-wiid). WIID will be regularly updated without a specific schedule. WIID combines informations from various authoritative sources including:
+The World Income Inequality Database (WIID) contains information about income inequality for 201 countries. WIID updates without a specific schedule. The current version, released on 28 November 2023, contains over 24,000 data points with observations from pre-1960s to 2022. We will import this dataset from the downloaded `.xlse` file from its website (https://www.wider.unu.edu/database/world-income-inequality-database-wiid).
+
+WIID combines information from various authoritative sources including:
 
 (1) LIS Cross-National Data Center (Luxembourg Income Study)
 (2) Eurostat
