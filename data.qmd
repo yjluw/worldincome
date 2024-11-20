@@ -1,6 +1,6 @@
 # Data
 
-## Description
+## 2.1 Technical description
 The World Income Inequality Database (WIID) contains comprehensive information about income inequality for 201 countries and historical entities. The current version contains over 24,000 data points with observations from pre-1960s to 2022. The database combines data from various authoritative sources including:
 
 1. LIS Cross-National Data Center (Luxembourg Income Study)
@@ -30,42 +30,34 @@ The observations are distributed across time periods as follows:
 
 
 
-## Missing value analysis
-To to understand data completeness and potential limitations for our analysis, we should examine the missing values in key variables:
+## 2.2 Missing value analysis
 
-1. Inequality measures (Gini coefficient (`gini`), decile shares (`d1-d10`), quintile shares (`q1-q5`))
-2. Resource concepts (income vs. consumption)
-3. Geographic coverage
-4. Time period coverage
-5. Quality ratings of the observations
-Sure, here's a formatted version of the analysis in a Quarto document:
+We want to first look at the range of years for the data by country and by continent to see if we can observe any patterns.
+```{r}
+library(readxl)
+library(ggplot2)
+library(tidyr)
+data <- read_excel("WIID_28NOV2023.xlsx")
+data <- data %>%
+  mutate(region_un = ifelse(country == "Turkiye", "Europe", region_un))
 
+```
 
-## Analyzing Missing Values in the Dataset
+```{r, fig.height=8, fig.width=18}
+data <- data %>%
+  mutate(country = factor(country, levels = data %>%
+                            distinct(country, region_un) %>%
+                            arrange(region_un, country) %>%
+                            pull(country)))
 
-To understand the data completeness and potential limitations for our analysis,  we should examine the missing values in key variables:
+# Create the plot without connecting points and retaining multiple data points per country
+ggplot(data, aes(x = country, y = year, color = region_un)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = "Year Range of Data for Each Country", 
+       x = "Country", 
+       y = "Year", 
+       color = "Region")
 
-### Inequality Measures
-- Gini coefficient (`gini`)
-- Decile shares (`d1-d10`)
-- Quintile shares (`q1-q5`)
-These are important variables for understanding income and wealth distribution, so we should check for any missing values and the overall coverage.
-
-### Resource Concepts (Income vs. Consumption)
-- The variables `resource` and `resource_detailed` indicate whether the data represents income or consumption. 
-- We should check for any missing values or imbalance in coverage between income and consumption data.
-
-### Geographic Coverage
-- Variables like `country`, `c2`, `c3`, `region_un`, `region_wb` cover different ways of grouping the geographic regions.
-- Checking for missing values and understanding the geographic representation in the dataset is important.
-
-### Time Period Coverage
-- The `year` variable indicates the survey year, so we should examine the range and completeness of years covered.
-
-### Quality Ratings
-- The `quality` and `quality_score` variables provide quality assessments.
-- Checking for missing values and understanding the quality distribution is crucial.
-
-### Other Variables
-- `population`, `gdp`, `mean`, `median` are also important variables to check for missing data.
-- The `source`, `source_detailed`, `source_comments` variables provide information about the data source, which is useful to understand potential limitations.
+```
+From the plot, we can observe that even though the data spans over 100 years, most records are concentrated between the 1950s and 2020s. We can also see that countries in Europe and America have the most frequent data recordings, with almost a data point for each year. Whereas for African countries, data are measured less frequently.
