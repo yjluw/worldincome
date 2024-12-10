@@ -3,21 +3,206 @@
 library(readxl)
 library(ggplot2)
 library(tidyverse)
-Data <- read_excel("WIID_28NOV2023.xlsx")
-Data <- Data |>
-  mutate(region_un = ifelse(country == "Turkiye", "Europe", region_un))
+data <- read_excel("WIID_28NOV2023.xlsx")
+data_nomissing <- data[rowSums(is.na(data)) <= 4, ]
+data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale == 'Per capita', resource == 'Income (net)')
 ```
 
 ```{r}
-#| fig.width:
-#| fig.height: 10
-#palma: Palma ratio – the share of the top 10% divided by the share of the bottom 40%
-#Resource_detailed: 
-#reference_unit : Unit of analysis, indicates whether the data has been weighted with a person or a household weight
-Data |> filter(resource_detailed=="Income, net"&reference_unit=="Person"& (scale=="Per capita") & source == "United Nations") |>  ggplot(aes(year,gini,color=country))+geom_line()+geom_point()+facet_wrap(~region_un,ncol=1,scales='free_y')+ theme(legend.position = "none")
-D1
+data_US <- data |> filter(country == 'India')
+data_US_unique <- data_US %>%
+  group_by(country, year) %>%         
+  arrange(desc(!is.na(q1)),            # Prioritize rows with non-null q1
+          desc(popcovr == "All"),      # Then prioritize popcovr == "All"
+          resource == "Earnings") %>% # Then prioritize resource == "Earnings"
+  slice(1) %>%                         # Select the first row after sorting
+  ungroup()  
 ```
 
 ```{r}
-Data |> filter(resource_detailed=="Income, net"&reference_unit=="Person"& (scale=="Per capita") & source == "United Nations") 
+areacovr_percentage <- data %>%
+  group_by(region_un) %>%
+  summarise(percentage = n() / nrow(data) * 100)
+
+# Print the result
+print(areacovr_percentage)  
+```
+
+```{r}
+# # yearly_counts <- data_unique %>%
+# #   group_by(year) %>%
+# #   summarise(row_count = n())
+# 
+# # Print the result
+# print(yearly_counts)
+```
+
+```{r, fig.width=15, fig.height=4}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+# Define the full range of years (1970–2022)
+all_years <- seq(1970, 2022)
+
+# Create a complete dataset with all years
+data_US_long <- data_US_unique %>%
+  select(year, q1, q2, q3, q4, q5) %>%  # Select relevant columns
+  pivot_longer(cols = q1:q5, names_to = "Income_Class", values_to = "Percentage") %>%
+  mutate(Percentage = replace_na(Percentage, 0)) %>% # Replace NA with 0
+  complete(year = all_years, Income_Class = unique(.$Income_Class), fill = list(Percentage = 0))
+
+# Create the stacked bar chart with vertical line and highlighted label
+ggplot(data_US_long, aes(x = factor(year), y = Percentage, fill = Income_Class)) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette = "Spectral", name = "Income Quintile") + # Use discrete color palette
+  geom_vline(xintercept = as.numeric(factor(2020, levels = all_years)), 
+             color = "red", size = 0.8) + # Add vertical line
+  geom_label(aes(x = as.numeric(factor(2020, levels = all_years)), 
+                 y = 105),  # Place the label slightly above the maximum bar height
+             label = "COVID-19", 
+             fill = "yellow",  # Highlight color
+             color = "black",  # Text color
+             fontface = "bold", size = 3) + # Customize label appearance
+  scale_x_discrete(limits = as.character(seq(1970, 2022))) + # Set x-axis range
+  labs(title = "Income Distribution by Quintile (Q1-Q5) Over Years",
+       x = "Year",
+       y = "Percentage") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+```
+
+```{r, fig.width=15, fig.height=4}
+# Define the full range of years (replace with your dataset's range)
+all_years <- seq(1990, 2022) # Set the range explicitly from 1990 to 2022
+
+# Create a complete dataset with all years
+data_US_long <- data_US_unique %>%
+  select(year, d1:d10) %>%  # Select relevant columns
+  pivot_longer(cols = d1:d10, names_to = "Income_Class", values_to = "Percentage") %>%
+  mutate(Percentage = replace_na(Percentage, 0)) %>% # Replace NA with 0
+  complete(year = all_years, Income_Class = unique(.$Income_Class), fill = list(Percentage = 0)) %>%
+  mutate(Income_Class = factor(Income_Class, levels = paste0("d", 1:10))) # Set correct factor levels
+
+# Create the stacked bar chart with vertical line and highlighted label
+ggplot(data_US_long, aes(x = factor(year), y = Percentage, fill = Income_Class)) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette = "Spectral", name = "Income Decile") + # Use discrete color palette
+  geom_vline(xintercept = as.numeric(factor(2020, levels = all_years)), 
+             color = "red", size = 0.8) + # Add vertical line
+  geom_label(aes(x = as.numeric(factor(2020, levels = all_years)), 
+                 y = 105),  # Place the label slightly above the maximum bar height
+             label = "COVID-19", 
+             fill = "yellow",  # Highlight color
+             color = "black",  # Text color
+             fontface = "bold", size = 3) + # Customize label appearance
+  scale_x_discrete(limits = as.character(seq(1990, 2022))) + # Set the x-axis range
+  labs(title = "Income Distribution by Decile (D1-D10) Over Years",
+       x = "Year",
+       y = "Percentage") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+
+```{r, fig.width=15, fig.height=4}
+# Add a new column for GDP increase rate
+data_US_unique <- data_US_unique %>%
+  arrange(year) %>% # Ensure the data is sorted by year
+  group_by(country) %>% # Calculate within each country group
+  mutate(gdp_increase_rate = (gdp - lag(gdp)) / lag(gdp) * 100) %>% # Calculate percentage change
+  ungroup() # Ungroup after the operation
+
+# View the updated dataset
+head(data_US_unique)
+
+
+# Define the range of years to display (1970–2022)
+all_years <- seq(1970, 2022)
+
+# Prepare data for the bar plot (q1-q5)
+data_US_long <- data_US_unique %>%
+  filter(year >= 1970 & year <= 2022) %>%  # Filter for the year range
+  select(year, q1, q2, q3, q4, q5, gdp_increase_rate) %>%  # Include GDP increase rate
+  pivot_longer(cols = q1:q5, names_to = "Income_Class", values_to = "Percentage") %>%
+  mutate(Percentage = replace_na(Percentage, 0)) %>% # Replace NA with 0
+  complete(year = all_years, Income_Class = unique(.$Income_Class), fill = list(Percentage = 0))
+
+# Create the stacked bar chart with GDP increase rate line overlay
+ggplot(data_US_long, aes(x = factor(year))) +
+  geom_bar(aes(y = Percentage, fill = Income_Class), stat = "identity") + # Stacked bar chart
+  geom_line(data = data_US_unique %>% filter(year >= 1970 & year <= 2022), 
+            aes(y = gdp_increase_rate * 5, group = 1), 
+            color = "blue", size = 1.2) + # Line plot for GDP increase rate
+  scale_fill_brewer(palette = "Spectral", name = "Income Quintile") + # Use discrete color palette
+  labs(title = "Income Distribution by Quintile (Q1-Q5) with GDP Increase Rate",
+       x = "Year",
+       y = "Percentage") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_y_continuous(sec.axis = sec_axis(~ ., name = "GDP Increase Rate (relative scale)"))
+
+
+
+```
+
+```{r, fig.width=15, fig.height=15}
+# data_US <- data |> filter(country != 'United Satates', resource != 'Incasdome (gross)')
+# 
+# data_gini <- data_US %>%
+#   group_by(country, year) %>%         
+#   arrange(desc(!is.na(gini)),
+#           desc(!is.na(q1)),            
+#           desc(popcovr == "All"), 
+#           resource == "Earnings") %>% 
+#   slice(1) %>%                        
+#   ungroup()  
+# data_gini_2022 <- data_gini |> filter(year == 2019)
+# 
+# 
+# 
+# library(ggplot2)
+# library(dplyr)
+# library(sf)
+# library(rnaturalearth)
+# library(rnaturalearthdata)
+# library(viridis)
+# library(RColorBrewer)
+# 
+# # Data frame with Gini Index
+# data_gini <- data.frame(
+#   country = data_gini_2022$country, 
+#   gini = data_gini_2022$gini
+# )
+# 
+# # Get world map data
+# world <- ne_countries(scale = "medium", returnclass = "sf")
+# 
+# # Rename `name_long` to `country` for matching and join
+# world <- world %>%
+#   mutate(country = name_long) %>% # Create a new column named `country`
+#   left_join(data, by = "country") # Perform the join
+# 
+# ggplot(data = world) +
+#   geom_sf(aes(fill = gini), color = "black", size = 0.2) +
+#   scale_fill_distiller(
+#     palette = "RdYlGn",  # Red-Yellow-Green gradient
+#     direction = -1,      # Reverse to make it Green-to-Red
+#     na.value = "gray90"  # Color for missing values
+#   ) +
+#   theme_minimal() +
+#   labs(
+#     title = "Gini Index by Country",
+#     fill = "Gini Index"
+#   ) +
+#   theme(
+#     plot.title = element_text(hjust = 0.5),
+#     axis.text = element_blank(),
+#     axis.ticks = element_blank()
+#   )
 ```
