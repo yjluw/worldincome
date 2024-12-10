@@ -1,1 +1,23 @@
 # Results
+```{r}
+library(readxl)
+library(ggplot2)
+library(tidyverse)
+Data <- read_excel("WIID_28NOV2023.xlsx")
+Data <- Data |>
+  mutate(region_un = ifelse(country == "Turkiye", "Europe", region_un))
+```
+
+```{r}
+#| fig.width:
+#| fig.height: 10
+#palma: Palma ratio – the share of the top 10% divided by the share of the bottom 40%
+#Resource_detailed: 
+#reference_unit : Unit of analysis, indicates whether the data has been weighted with a person or a household weight
+Data |> filter(resource_detailed=="Income, net"&reference_unit=="Person"& (scale=="Per capita") & source == "United Nations") |>  ggplot(aes(year,gini,color=country))+geom_line()+geom_point()+facet_wrap(~region_un,ncol=1,scales='free_y')+ theme(legend.position = "none")
+D1
+```
+
+```{r}
+Data |> filter(resource_detailed=="Income, net"&reference_unit=="Person"& (scale=="Per capita") & source == "United Nations") 
+```
