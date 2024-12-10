@@ -1,1 +1,27 @@
 # Results
+```{r}
+library(readxl)
+library(ggplot2)
+library(tidyverse)
+data <- read_excel("WIID_28NOV2023.xlsx")
+data_nomissing <- data[rowSums(is.na(data)) <= 4, ]
+data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale == 'Per capita', resource == 'Income (net)')
+```
+
+```{r}
+data_unique <- data %>%
+  group_by(country, year) %>%                     # Group by country and year
+  arrange(desc(popcovr == "All")) %>%             # Prioritize rows where popcovr is "All"
+  arrange(resource == "Earnings") %>%
+  slice(1) %>%                                    # Pick the first row after sorting
+  ungroup()  
+```
+
+```{r}
+areacovr_percentage <- data %>%
+  group_by(resource) %>%
+  summarise(percentage = n() / nrow(data) * 100)
+
+# Print the result
+print(areacovr_percentage)  
+```
