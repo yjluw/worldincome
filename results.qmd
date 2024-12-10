@@ -115,169 +115,10 @@ ggplot(filtered_data, aes(x = year, y = gini)) +
   )
 ```
 
-```{r}
-# 假设数据包含以下列：country, year, gini, gdp
-# 过滤特定国家（以美国为例）
-data_us <- data_median |>
-  filter(country == "United States") |>
-  select(year, gini, gdp) |>
-  arrange(year) # 按年份排序
-
-# 处理不连续年份：计算年度增长率
-data_us <- data_us |>
-  mutate(year_diff = year - lag(year)) |>
-  mutate(
-    gdp_growth = ifelse(
-      year_diff == 1,  # 只有年份差为1时计算增长率
-      (gdp - lag(gdp)) / lag(gdp) * 100,
-      NA  # 否则设为NA
-    )
-  ) |>
-  select(-year_diff)  # 移除辅助列
-
-# 将数据从宽格式转换为长格式，以便绘制多条线
-data_long <- data_us |>
-  pivot_longer(cols = c(gini, gdp_growth), names_to = "indicator", values_to = "value")
-
-# 绘制折线图
-ggplot(data_long, aes(x = year, y = value, color = indicator, group = indicator)) +
-  geom_line(size = 1) +
-  geom_point(size = 2) +
-  labs(
-    title = "GDP Growth and Gini Index Over Years for United States",
-    x = "Year",
-    y = "Value",
-    color = "Indicator"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(size = 10), # x 轴刻度字体大小
-    axis.text.y = element_text(size = 10), # y 轴刻度字体大小
-    axis.title = element_text(size = 12),  # 坐标轴标题字体大小
-    plot.title = element_text(size = 14, face = "bold"), # 主标题字体大小
-    legend.title = element_text(size = 12), # 图例标题字体大小
-    legend.text = element_text(size = 10)   # 图例内容字体大小
-  )
-
-```
-
-```{r}
-# Results
-```{r}
-library(readxl)
-library(ggplot2)
-library(tidyverse)
-data <- read_excel("WIID_28NOV2023.xlsx")
-data <- data |>
-  mutate(region_un = ifelse(country == "Turkiye", "Europe", region_un))
-data_nomissing <- data[rowSums(is.na(data)) <= 4, ]
-data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale == 'Per capita', resource == 'Income (net)')
-```
 
 
 
-```{r}
-#| fig-height: 17
-#| fig-width: 10
 
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-
-data_median <- data |>
-  group_by(country, year) |>        
-  arrange(desc(!is.na(gini)),desc(!is.na(gini)),desc(popcovr == "All"),resource == "Earnings") |>
-  slice(1) |> ungroup()  
-
-data_avg <- data_median |>
-  mutate(period = case_when(
-    year >= 1950 & year <= 2000 ~ "1950-2000",
-    year > 2000 & year <= 2022 ~ "2000-2022",
-    TRUE ~ NA_character_
-  )) |>
-  filter(!is.na(period)) |>
-  group_by(country, period) |>
-  summarise(avg_gini = mean(gini, na.rm = TRUE), .groups = "drop") |>
-  pivot_wider(names_from = period, values_from = avg_gini) |>
-  mutate(has_recent_data = ifelse(is.na(`2000-2022`), 0, 1)) |>
-  arrange(has_recent_data, `2000-2022`) |>
-  mutate(country_order = factor(country, levels = country)) 
-
-ggplot(data_avg, aes(y = country_order)) +
-  geom_point(aes(x = `2000-2022`, color = "2000-2022"), size = 2) +
-  geom_point(aes(x = `1950-2000`, color = "1950-2000"), size = 2) +
-  geom_segment(
-    aes(x = `1950-2000`, xend = `2000-2022`, y = country_order, yend = country_order),
-    color = "gray"
-  ) +
-  labs(
-    title = "Comparison of Average Gini Coefficients (1950-2000 vs 2000-2022)",
-    x = "Average Gini Coefficient",
-    y = "Country",
-    color = "Period"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.y = element_text(size = 8),  
-    legend.position = "right",             
-    legend.title = element_text(size = 10), 
-    legend.text = element_text(size = 9)   
-  ) +
-  scale_color_manual(values = c("1950-2000" = "red", "2000-2022" = "blue"))
-
-```
-```{r}
-#| fig-height: 10
-#| fig-width: 10
-library(ggrepel)
-n <- 5
-
-top_countries_by_region <- data_median |>
-  group_by(region_un, country) |>
-  summarise(gini_range = max(gini, na.rm = TRUE) - min(gini, na.rm = TRUE), .groups = "drop") |>
-  group_by(region_un) |>
-  slice_max(gini_range, n = n) |>
-  pull(country)
-
-filtered_data <- data_median |>
-  filter(country %in% top_countries_by_region)
-
-start_points <- filtered_data |>
-  group_by(region_un, country) |>
-  filter(year == min(year)) |>
-  ungroup()
-
-ggplot(filtered_data, aes(x = year, y = gini)) +
-  geom_point(aes(color = country), size = 1) +
-  geom_line(aes(group = country, color = country)) +
-  geom_text_repel(
-    data = start_points,
-    aes(label = country,color = country),
-    size = 3,                  
-    max.overlaps = 8,        
-    force = 1,                 
-    nudge_x = 3,               
-    direction = "both",       
-    segment.color = "gray50",  
-    segment.size = 0.5,        
-    segment.curvature = -0.2,  
-    segment.ncp = 5,           
-    segment.angle = 90            
-  ) +
-  facet_wrap(~ region_un, scales = "free",ncol=2) +
-  labs(
-    title = paste("Top", n, "Countries by Gini Coefficient Range in Each Region"),
-    x = "Year",
-    y = "Gini Coefficient",
-    color = "Country"
-  ) +
-  theme_minimal() +
-  theme(
-    legend.position = "None", 
-    legend.text = element_text(size = 8), 
-    strip.text = element_text(size = 10) 
-  )
-```
 
 ```{r}
 
@@ -435,7 +276,7 @@ ggplot(data_us, aes(x = year)) +
 
 
 ```{r}
-coun <- "Germany"
+coun <- "Burkina Faso"
 
 data_us <- data_median |>
   filter(country == coun) |>
