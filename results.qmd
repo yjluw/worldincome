@@ -1,1 +1,294 @@
 # Results
+
+Each of these visualizations combines multiple related aspects into a single, coherent graph that tells a more complete story about different aspects of global inequality.
+```{r,setups,include=FALSE}
+library(readxl)
+library(tidyverse)
+library(patchwork)
+
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE
+)
+
+data <- read_excel("WIID_28NOV2023.xlsx")
+
+```
+
+## **Global Income Inequality Trends Visualization**
+
+This visualization presents a comprehensive analysis of global income inequality data from 1900 to 2022, structured in three panels:
+
+1. **Top Panel - Data Coverage** (Area Chart)
+   - Shows the number of observations over time
+   - Stacked by different resource types (Consumption, Earnings, Income variants)
+   - Illustrates the increasing data availability in recent decades
+
+2. **Middle Panel - Inequality Trends** (Line Plot)
+   - Displays average Gini coefficient trends for each resource type
+   - Features smoothed trend lines to show long-term patterns
+   - Demonstrates how inequality measures vary across different resource definitions
+
+3. **Bottom Panel - Data Quality** (Faceted Area Chart)
+   - Presents the proportion of quality ratings over time
+   - Separated by resource type for detailed comparison
+   - Helps assess the reliability of the inequality measurements
+
+The visualization combines these elements to provide insights into both the trends in global inequality and the evolving nature of its measurement and data quality.
+
+Note: The Gini coefficient ranges from 0 (perfect equality) to 100 (perfect inequality), with higher values indicating greater inequality.
+
+```{r, data-prepartion}
+# ------------------------------------------------------------------------
+# DATA PREPARATION
+# ------------------------------------------------------------------------
+# Convert resource and quality to factors with specific level ordering
+# This affects the order of appearance in plots - modify levels to change order
+data <- data |>
+ mutate(
+   resource = factor(resource, 
+                    levels = c("Consumption", "Earnings", "Income (gross)", 
+                             "Income (net)", "Income (net/gross)")),
+   quality = factor(quality, 
+                   levels = c("High", "Average", "Low", "Not known"))
+ )
+
+# Calculate observation counts per year and resource type
+# Filtered to 1900-2022 for meaningful visualization
+obs_counts <- data |>
+ count(year, resource) |>
+ filter(!is.na(resource), !is.na(year), 
+        year >= 1900, year <= 2022)
+
+# Calculate average Gini coefficients and related statistics
+# Modify summary statistics by adding/removing from summarise()
+gini_trends <- data |>
+ filter(!is.na(resource), !is.na(gini), !is.na(year),
+        year >= 1900, year <= 2022) |>
+ group_by(year, resource) |>
+ summarise(
+   mean_gini = mean(gini, na.rm = TRUE),
+   sd_gini = sd(gini, na.rm = TRUE),
+   n = n(),
+   .groups = 'drop'
+ )
+
+# Calculate quality composition proportions
+# Results in proportions of each quality rating by year and resource
+quality_comp <- data |>
+ filter(!is.na(resource), !is.na(quality), !is.na(year),
+        year >= 1900, year <= 2022) |>
+ count(year, resource, quality) |>
+ group_by(year, resource) |>
+ mutate(prop = n/sum(n))
+```
+
+
+```{r,color-definitions}
+# ------------------------------------------------------------------------
+# COLOR DEFINITIONS
+# ------------------------------------------------------------------------
+# Custom color palettes - modify hex codes to change colors
+# Light pastel colors for resources
+resource_colors <- c(
+ "Consumption" = "#FFB5B5",    # Light pink
+ "Earnings" = "#66B2B2",       # Teal
+ "Income (gross)" = "#85C1E9",  # Light blue
+ "Income (net)" = "#A3D39C",    # Light green
+ "Income (net/gross)" = "#FFE0A4" # Light yellow
+)
+
+# Green gradient for quality ratings
+quality_colors <- c(
+ "High" = "#2E7D32",      # Dark green
+ "Average" = "#81C784",   # Medium green
+ "Low" = "#C8E6C9",       # Light green
+ "Not known" = "#EEEEEE"  # Light grey
+)
+```
+
+```{r,plot-creation}
+# ------------------------------------------------------------------------
+# PLOT CREATION
+# ------------------------------------------------------------------------
+# Top panel: Number of observations over time
+# Modify breaks, text sizes, or alpha for different visual effects
+p1 <- ggplot(obs_counts, aes(x = year, y = n, fill = resource)) +
+  geom_area(position = "stack", alpha = 0.8) +
+  scale_fill_manual(values = resource_colors, name = "Resource Type") +
+  scale_x_continuous(breaks = seq(1900, 2020, 40)) +
+  scale_y_continuous(breaks = seq(0, 1000, 250)) +
+  labs(title = "Distribution of Observations Over Time",
+       subtitle = "Stacked area chart showing the number of observations by resource type",
+       y = "Number of\nObservations", 
+       x = NULL) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11, color = "grey30")
+  )
+
+# Middle panel: Gini coefficient trends
+# Modify smoothing span, line alpha, or axis breaks as needed
+p2 <- ggplot(gini_trends, aes(x = year, y = mean_gini, color = resource)) +
+  geom_smooth(se = FALSE, span = 0.3) +
+  geom_line(alpha = 0.4) +
+  scale_color_manual(values = resource_colors) +
+  scale_x_continuous(breaks = seq(1900, 2020, 40)) +
+  scale_y_continuous(breaks = seq(25, 65, 10)) +
+  labs(title = "Global Average Gini Coefficient Trends",
+       subtitle = "Smoothed trends of inequality measures across different resource types",
+       y = "Average Gini\nCoefficient", 
+       x = NULL) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11, color = "grey30")
+  )
+
+# Bottom panel: Quality composition
+# Modify facet layout, spacing, or text sizes as needed
+p3 <- ggplot(quality_comp, aes(x = year, y = prop, fill = quality)) +
+  geom_area(position = "stack", alpha = 0.8) +
+  facet_wrap(~resource, ncol = 5, scales = "free_x") +
+  scale_fill_manual(values = quality_colors, name = "Quality") +
+  scale_x_continuous(breaks = c(1900, 2000)) +
+  scale_y_continuous(labels = scales::percent_format(), 
+                    breaks = seq(0, 1, 0.5)) +
+  labs(title = "Data Quality Composition by Resource Type",
+       subtitle = "Proportion of quality ratings over time for each resource category",
+       y = "Proportion of\nQuality Ratings", 
+       x = "Year") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 9, margin = margin(b = 5)),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(size = 8),
+    axis.title = element_text(size = 12),
+    legend.position = "right",
+    panel.spacing.x = unit(0.5, "lines"),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11, color = "grey30")
+  )
+
+# ------------------------------------------------------------------------
+# COMBINE PLOTS AND ADD TITLE
+# ------------------------------------------------------------------------
+# Combine plots with specified height ratios
+# Modify heights to change relative size of panels
+combined_plot <- (p1 / plot_spacer() / p2 / plot_spacer() / p3) +
+  plot_layout(heights = c(1, 0.1, 1.5, 0.1, 1)) &  # The 0.1 values create spacing
+  theme(plot.margin = margin(5, 5, 5, 5))
+
+
+# Add main title to combined plot
+combined_plot <- combined_plot +
+  plot_annotation(
+    title = "Global Income Inequality Trends",
+    subtitle = "Analysis of income inequality measures, data coverage, and quality across different resource types",
+    theme = theme(
+      plot.title = element_text(
+        size = 20, face = "bold", hjust = 0.5, 
+        margin = margin(b = 5)
+      ),
+      plot.subtitle = element_text(
+        size = 14, color = "grey30", hjust = 0.5, 
+        margin = margin(b = 20)
+      )
+    )
+  )
+```
+
+
+```{r,fig.width=12, fig.height=10, message=FALSE}
+combined_plot
+```
+Data coverage shows a dramatic increase in inequality measurements worldwide since 1980, reflecting growing attention to tracking economic disparities. The Gini coefficient trends reveal that income inequality has generally decreased from the high levels of the 1940s, though with notable variations across different types of measurements. The quality of data has improved substantially over time, with a higher proportion of high-quality measurements in recent decades.
+
+Looking deeper into the trends, several interesting patterns emerge:
+
+- Income inequality was highest in the mid-20th century (1940s-1950s) with Gini coefficients around 55, suggesting extreme economic disparities during the post-war period.
+
+- While overall inequality has decreased since then, the decline hasn't been uniform. Net income measurements show the lowest inequality levels (around 35), while gross income and earnings measurements indicate higher disparities.
+
+- The recent uptick in inequality measures since 2000, particularly in earnings and gross income, suggests that economic growth may be coinciding with widening income gaps in some areas, despite overall historical improvements.
+
+This analysis challenges the simple notion that economic development automatically reduces inequality, suggesting instead that the relationship between growth and inequality is complex and likely influenced by policy choices and measurement approaches.
+
+## **Geographic Inequality Distribution**
+   - Center: World choropleth map of Gini coefficients
+   - Side panels: Regional box plots
+   - Small multiples: Time series for each continent
+   - Color coding by World Bank income groups
+   - Annotations for notable outliers
+
+## **Income Group Analysis Dashboard**
+   - Top: Parallel coordinates plot across income groups
+   - Middle: Box plots comparing all inequality measures
+   - Bottom: Time series showing convergence/divergence
+   - Faceted by time periods (decades)
+   - Interactive elements to highlight specific countries
+
+## **Measurement Methodology Impact**
+   - Main: Scatter plot comparing income vs. consumption Gini
+   - Side: Density plots for each measure
+   - Panels: Quality rating distribution
+   - Faceted by decades and regions
+   - Regression lines showing systematic differences
+
+## **Development-Inequality Relationship**
+   - Center: GDP per capita vs. Gini scatter plot
+   - Trajectories for selected countries over time
+   - Color coding by region
+   - Size by population
+   - Faceted by time periods
+
+## **Inequality Measures Correlation Matrix**
+   - Upper triangle: Scatter plots
+   - Lower triangle: Correlation coefficients
+   - Diagonal: Density plots
+   - Faceted by resource type
+   - Color coded by quality rating
+
+## **Regional Inequality Dynamics**
+   - Main: Regional trend lines
+   - Background: Individual country trajectories
+   - Confidence bands showing variation
+   - Annotations for major economic events
+   - Faceted by World Bank classification
+
+## **Quality Assessment Overview**
+   - Center: Heat map of quality by region and time
+   - Margins: Quality distribution summaries
+   - Overlay: Data coverage indicators
+   - Faceted by resource type
+   - Highlighted cells for key patterns
+
+## **Income Share Distribution Analysis**
+   - Main: Decile share stacked area charts
+   - Side: Lorenz curves over time
+   - Bottom: Palma ratio evolution
+   - Faceted by region
+   - Trend lines for key percentiles
+
+## **Methodological Consistency Analysis**
+    - Primary: Consistency scores across sources
+    - Secondary: Method changes over time
+    - Supporting: Coverage quality metrics
+    - Faceted by region and income group
+    - Highlighted methodology transitions
+
+## **Population-Weighted Analysis**
+    - Main: Population-weighted vs. unweighted measures
+    - Side: Population coverage percentages
+    - Bottom: Bias indicators
+    - Faceted by decade
+    - Uncertainty bands
+
