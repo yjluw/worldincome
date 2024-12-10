@@ -9,7 +9,47 @@ data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale
 ```
 
 ```{r}
-data_US <- data |> filter(country == 'India')
+data_US <- data #|> filter(country == 'United States')
+data_US_unique <- data_US %>%
+  group_by(country, year) %>%         
+  arrange(desc(!is.na(gdp)),            # Prioritize rows with non-null q1
+          desc(!is.na(gini)),
+          desc(popcovr == "All"),      # Then prioritize popcovr == "All"
+          resource == "Earnings") %>% # Then prioritize resource == "Earnings"
+  slice(1) %>%                         # Select the first row after sorting
+  ungroup() 
+```
+
+```{r}
+data_US_unique |> filter(region_un="Asia")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+data_US <- data |> filter(country == 'United States')
 data_US_unique <- data_US %>%
   group_by(country, year) %>%         
   arrange(desc(!is.na(q1)),            # Prioritize rows with non-null q1
@@ -152,57 +192,58 @@ ggplot(data_US_long, aes(x = factor(year))) +
 ```
 
 ```{r, fig.width=15, fig.height=15}
-# data_US <- data |> filter(country != 'United Satates', resource != 'Incasdome (gross)')
-# 
-# data_gini <- data_US %>%
-#   group_by(country, year) %>%         
-#   arrange(desc(!is.na(gini)),
-#           desc(!is.na(q1)),            
-#           desc(popcovr == "All"), 
-#           resource == "Earnings") %>% 
-#   slice(1) %>%                        
-#   ungroup()  
-# data_gini_2022 <- data_gini |> filter(year == 2019)
-# 
-# 
-# 
-# library(ggplot2)
-# library(dplyr)
-# library(sf)
-# library(rnaturalearth)
-# library(rnaturalearthdata)
-# library(viridis)
-# library(RColorBrewer)
-# 
-# # Data frame with Gini Index
-# data_gini <- data.frame(
-#   country = data_gini_2022$country, 
-#   gini = data_gini_2022$gini
-# )
-# 
-# # Get world map data
-# world <- ne_countries(scale = "medium", returnclass = "sf")
-# 
-# # Rename `name_long` to `country` for matching and join
-# world <- world %>%
-#   mutate(country = name_long) %>% # Create a new column named `country`
-#   left_join(data, by = "country") # Perform the join
-# 
-# ggplot(data = world) +
-#   geom_sf(aes(fill = gini), color = "black", size = 0.2) +
-#   scale_fill_distiller(
-#     palette = "RdYlGn",  # Red-Yellow-Green gradient
-#     direction = -1,      # Reverse to make it Green-to-Red
-#     na.value = "gray90"  # Color for missing values
-#   ) +
-#   theme_minimal() +
-#   labs(
-#     title = "Gini Index by Country",
-#     fill = "Gini Index"
-#   ) +
-#   theme(
-#     plot.title = element_text(hjust = 0.5),
-#     axis.text = element_blank(),
-#     axis.ticks = element_blank()
-#   )
+data_US <- data |> filter(country != 'United Satates', resource != 'Incasdome (gross)')
+
+data_gini <- data_US %>%
+  group_by(country, year) %>%         
+  arrange(desc(!is.na(gini)),
+          desc(!is.na(q1)),            
+          desc(popcovr == "All"), 
+          resource == "Earnings") %>% 
+  slice(1) %>%                        
+  ungroup()  
+data_gini_2022 <- data_gini |> filter(year == 2019)
+
+
+
+library(ggplot2)
+library(dplyr)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(viridis)
+library(RColorBrewer)
+
+# Data frame with Gini Index
+data_gini <- data.frame(
+  country = data_gini_2022$country, 
+  gini = data_gini_2022$gini
+)
+
+# Get world map data
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Rename `name_long` to `country` for matching and join
+world <- world %>%
+  mutate(country = name_long) %>% # Create a new column named `country`
+  left_join(data, by = "country") # Perform the join
+
+ggplot(data = world) +
+  geom_sf(aes(fill = gini), color = "black", size = 0.2) +
+  scale_fill_distiller(
+    palette = "RdYlGn",  # Red-Yellow-Green gradient
+    direction = -1,      # Reverse to make it Green-to-Red
+    na.value = "gray90"  # Color for missing values
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Gini Index by Country",
+    fill = "Gini Index"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
+  )
+
 ```
