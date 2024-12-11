@@ -789,6 +789,9 @@ fig
 
 
 ## Xiaojiang 1 How Gini of countries has been changed from 1950-2000 to 2000-2022
+
+This Cleveland plot shows average gini for countries in two periods:`1950-2000` and `2000-2022`. The average Gini of each country is calculated using the available Gini index of each year during that period. This plot captures the  trends in income inequality across countries over time. Blue dots represent the Gini in period `2000-2022` and red dots represent the Gini in period `1950-2000`. The link linking the two points indicates a change of gini from `1950-2000` to `2000-2022` so a longer line means a bigger change happening over time.
+
 ```{r, fig.width=10, fig.height=17, warning=FALSE}
 data_nomissing <- data[rowSums(is.na(data)) <= 4, ]
 data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale == 'Per capita', resource == 'Income (net)')
@@ -838,17 +841,18 @@ ggplot(data_avg, aes(y = country_order)) +
   scale_color_manual(values = c("1950-2000" = "red", "2000-2022" = "blue"))
 ```
 
-1.Looking at the graph in general, we can see that Gini trends vary across countries and regions. Inequality has risen in some countries, while it has remained relatively stable or even fallen in others, reflecting the impact of global economic developments and policy differences.
+Looking at the graph in general, we can see that Gini trends vary across countries and regions. Inequality has risen in some countries, while it has remained relatively stable or even fallen in others, reflecting the impact of global economic developments and policy differences. Most countries have both 1950-2000 and 2000-2022 data. However, some countries face the problem of missing data for the most recent period in 2000-2022, which are displayed at the bottom of the plot.
 
-2.Most countries have both 1950-2000 and 2000-2022 data. However, some countries face the problem of missing data for the most recent period in 2000-2022.
+Some countries  remain high `Gini` in these two periods including `South Africa`,`Hajti` and `Brazil` in both periods. Among countries with the highest Gini Coefficient, more countries have some degree of increase in Gini while only a few countries improve their inequality and reduce the Gini coefficient like `Nambia` and `Zambia`. Further more, Countries with similar Gini Coefficients often have common features in their economic structure, policy choices, or regional influences. For example, Latin American countries generally have high Gini Coefficients, while Western European countries have relatively low Gini
 
-3.Some countries still remain high `Gini` in these two periods including `South Africa`,`Hajti` and `Brazil`. Among countries with the highest Gini Coefficient, more countries have some degree of increase in Gini while only a few countries improve their inequality and reduce the Gini coefficient like `Nambia` and `Zambia`.
-
-4.  Countries with similar Gini Coefficients often have common features in their economic structure, policy choices, or regional influences. For example, Latin American countries generally have high Gini Coefficients, while Western European countries have relatively low Gini
-
-5.  Across all countries, there more countries having Gini dramatically decreased or remaining stable compared to those encountering huge increase in Gini. So it reflects most countries did well in controlling the income inequality.
+At the end when looking at the pattern more broadly, across all countries, there more countries having Gini dramatically decreased or remaining stable compared to those encountering huge increase in Gini. So it reflects most countries did well in controlling the income inequality.
 
 ## Xiaojiang 2 How Gini of Top and bottom 5 Countries by GDP in Each Region evlovs through time
+
+Seeing the gini index for two periods, we want to see if `region` will influence the change of gini over time. Considering huge amount of countries in each region, we decide to sample the 5 countries with the highest GDP and the lowest GDP in each region.
+
+This two scatter plot and smooth line show how income inequality changed over time in the top 5 countries with the highest GDP in each region. The Gini coefficient is used to measure income inequality, with higher values indicating greater inequality.  
+
 ```{r, fig.width=10, fig.height=14, warning=FALSE}
 n <-5
 
@@ -901,7 +905,19 @@ ggplot(filtered_data, aes(x = year, y = gini)) +
     strip.text = element_text(size = 10)
   )
 ```
+In this question, we want to sample top 5 countries with the highest GDP for each regions and explore how their Gini changed over time so we can have a deeper understand of relationship between the Gini mode and regions.
 
+1.  It is surprising to see that the top countries in some region have similar trends of Gini. In particular, top countries in European have almost the same trends of Gini and each Gini line stays really close to each other. This is could resulted in because of the close cooperation and connections between these European countries.
+
+2.  Africa and Asia exhibit more volatile patterns compared to the relatively stable trends in Europe and Americas. And Countries in Africa generally have high Gini and `Gabon` even reached gini of 70 which indicates a severe income inequality.
+
+3.Generally speaking, Developed economics like United States,Canada and Australia demonstrate relatively stable Gini Coefficients while The Gini coefficients in developing regions (such as Africa and Asia) are higher and more volatile, which may reflect differences in economic structure, government policies, and social distribution systems among regions.
+
+
+
+
+
+This two scatter plot and smooth line show how income inequality changed over time in the bottom 5 countries with the lowest GDP in each region. The Gini coefficient is used to measure income inequality, with higher values indicating greater inequality.  
 ```{r, fig.width=10, fig.height=14, warning=FALSE}
 n <- 5  
 
@@ -956,16 +972,28 @@ ggplot(filtered_data, aes(x = year, y = gini)) +
   )
 
 ```
-In this question, we want to sample top 5 countries with the highest gdp for each regions and explore how their Gini changed over time so we can have a deeper understand of relationship between the Gini mode and regions.
+From the plot, 
 
-1.  It is surprising to see that the top countries in each region have similar trends of Gini. In particular, top countries in European have almost the same trends of Gini and each Gini line stays really close to each other. This is could resulted in because of the close cooperation and connections between these European countries.
+1.Oceania has too few countries for the top and bottom five. The plots for Oceania are the same  
 
-2.  Africa and Asia exhibit more volatile patterns compared to the relatively stable trends in Europe and Americas. And Countries in Africa generally have high Gini and `Gabon` even reached gini of 70 which indicates a severe income inequality.
+2.Countries with lower GDPs generally face greater challenges in controlling income inequality, as reflected in higher and more volatile Gini coefficients across regions. similar to the plot of top 5 countries above, Africa and Asia still exhibit more volatile patterns compared to Europe. 
 
-3.Generally speaking, Developed economics like United States,Canada and Australia demonstrate relatively stable Gini Coefficients while The Gini coefficients in developing regions (such as Africa and Asia) are higher and more volatile, which may reflect differences in economic structure, government policies, and social distribution systems among regions.
+3.Europe and Oceania have lower and stable Gini coefficients, indicating more advanced social and economic policies.
+Economic development and inequality
 
+4. Some countries which is not developed has encountered a problem of increasing income inequality when they were trying to develop their economic. 
+
+In Africa, Gini of countries like `Malawi` and Mozambique all increased after some period. This phenomena is associated with their economic growth and introduction of foreign investment.
+
+In Asia, `China` has done well in reducing income inequality from `1960-1980` but the situations worsened after 1980 which match's the period when `China` decided to develop its economic according to some newly published policy. 
+
+In Europe, Gini of `Albania` has increased during `Albania`'s economic transition which means the transition from a planned to a market economy had a negative impact on income equality.
 
 ## Xiaojiang 3  Explore GDP growth and Gini in some countries
+
+Previous explorations stimulated our curiosity of the relationship between GDP growth and Gini. 
+So here we decide to take a closer look at some representative countries.
+
 ```{r, fig.width=10, fig.height=7, warning=FALSE}
 data_us <- data_median |>
   filter(country == "United States") |>
