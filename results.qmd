@@ -11,7 +11,7 @@ data$c3 <- ifelse(data$country == "Kosovo", "KOS", data$c3)
 data <- data[!data$c3 %in% c("CSK", "REU", "SCG", "SUN", "YUG"), ]
 
 data_nomissing <- data[rowSums(is.na(data)) <= 4, ]
-data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale == 'Per capita', resource == 'Income (net)')
+data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale == 'Per capita', resource == 'Income (gross)')
 ```
 
 ```{r}
@@ -184,7 +184,7 @@ data_gini_all_year <- data_gini_all_year %>%
           resource == "Earnings") %>% 
   slice(1) %>%                        
   ungroup()  
-data_gini_2022 <- data_gini_all_year |> filter(year == 2017)
+data_gini_2022 <- data_gini_all_year |> filter(year == 2016)
 
 
 # Data frame with Gini Index
@@ -225,9 +225,6 @@ ggplot(data = world) +
 
 ```
 
-
-
-
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -235,62 +232,66 @@ library(plotly)
 library(sf)
 library(rnaturalearth)
 
-# Your dataset: Assuming it's called `data_all_year`
-# Structure: country, year, gini
+# Assuming your dataset is called `data_gini_all_year`
+# Structure: country, year, gini, c3 (ISO3 code for countries)
 
 # Step 1: Get the list of all unique countries and years
 all_countries <- unique(data_gini_all_year$country)
-all_years <- seq(2015, 2020)
+all_years <- seq(1950, 2021)
 
 # Step 2: Create a complete grid of country and year
 complete_grid <- expand.grid(country = all_countries, year = all_years)
 
-# Step 3: Join your dataset with the complete grid
-data_all_year_complete <- complete_grid %>%
-  left_join(data_gini_all_year, by = c("country", "year"))
+# Populate the grid with Gini coefficient data
+complete_grid$gini <- NA
+complete_grid$gini <- data_gini_all_year$gini[
+  match(
+    paste(complete_grid$country, complete_grid$year, sep = "_"),
+    paste(data_gini_all_year$country, data_gini_all_year$year, sep = "_")
+  )
+]
+complete_grid$c3 <- data_gini_all_year$c3[match(complete_grid$country, data_gini_all_year$country)]
 
-# Step 4: Load world map data
+# Prepare spatial data
 world <- ne_countries(scale = "medium", returnclass = "sf")
+complete_grid$geometry <- world$geometry[match(complete_grid$c3, world$iso_a3_eh)]
 
-# Step 5: Prepare world map data for merging
-world <- world %>%
-  mutate(c3 = su_a3) %>%
-  mutate(country = name_long)
+# Convert year to a factor for animation
+plot_data <- complete_grid %>%
+  mutate(year = as.factor(year))
 
-# Step 6: Join the world map with the complete dataset
-world_data <- world %>%
-  left_join(data_all_year_complete, by = "country")
+# Define the range for the Gini coefficient
+gini_min <- min(plot_data$gini, na.rm = TRUE)
+gini_max <- max(plot_data$gini, na.rm = TRUE)
 
-# Step 7: Create the interactive plot with plotly
-plot <- ggplot(data = world_data) +
-  geom_sf(aes(fill = gini, frame = year), color = "black", size = 0.2) +
-  scale_fill_distiller(
-    palette = "RdYlGn",
-    direction = -1,
-    na.value = "gray90"  # Missing data shown in gray
-  ) +
-  theme_minimal() +
-  labs(
-    title = "Gini Index by Country (Scrollable by Year)",
-    fill = "Gini Index"
-  ) +
-  theme(
-    plot.title = element_text(hjust = 0.5),
-    axis.text = element_blank(),
-    axis.ticks = element_blank()
+# Create Plotly Choropleth Map
+fig <- plot_ly(
+  data = plot_data,
+  type = "choropleth",
+  locations = ~c3,             # Use the ISO3 column for country codes
+  locationmode = "ISO-3",      # ISO Alpha-3 codes for mapping
+  z = ~gini,                   # Gini coefficient values
+  frame = ~year,               # Animation frames by year
+  text = ~paste(country, "<br>Gini Coefficient:", gini),
+  hoverinfo = "text",
+  colorscale = "Viridis",       # Use RdYlGn color scale for the map
+  zmin = gini_min,             # Set the minimum for the color scale
+  zmax = gini_max,             # Set the maximum for the color scale
+  colorbar = list(title = "Gini Coefficient")
+)
+
+# Customize Layout
+fig <- fig %>%
+  layout(
+    title = "World Gini Coefficients Over Time",
+    geo = list(
+      projection = list(type = "natural earth"),
+      showcoastlines = TRUE
+    )
   )
 
-# Convert ggplot to an interactive plotly object
-interactive_plot <- ggplotly(plot, tooltip = c("country", "gini")) %>%
-  animation_opts(
-    frame = 1,   # Duration of each frame in milliseconds
-    easing = "linear"
-  ) %>%
-  animation_slider(
-    currentvalue = list(prefix = "Year: ")
-  )
-
-interactive_plot
+# Display the Map
+fig
 
 ```
 
