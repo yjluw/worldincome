@@ -632,6 +632,83 @@ vcd::mosaic(gini_type ~ gdp_growth_speed + developed,
             labeling = vcd::labeling_border(rot_labels = c(45, -45, 0, 0)),
             main = "Mosaic Plot: GDP Class, Developed Status, and Gini Type")
 ```
+```{r}
+library(ggalluvial)
+data_GDP <- data |>
+  group_by(country,year) |>        
+  arrange(desc(!is.na(gini)),          
+          desc(popcovr == "All"), 
+          resource == "Earnings") |>
+  slice(1) |> 
+  ungroup()
+
+data_period <- data_GDP |>
+  mutate(period = case_when(
+    year >= 1950 & year <= 1975 ~ "1950-1975",
+    year > 1975 & year <= 2000 ~ "1975-2000",
+    year > 2000 & year <= 2022 ~ "2000-2022",
+    TRUE ~ NA_character_
+  )) |>
+  filter(!is.na(period))
+
+data_avg_gini <- data_period |>
+  group_by(country, period) |>
+  summarise(avg_gini = mean(gini, na.rm = TRUE), .groups = "drop") |>
+  mutate(
+    gini_type = case_when(
+      avg_gini < 30 ~ "Low",
+      avg_gini <= 40 ~ "Mid",
+      TRUE ~ "High"
+    )
+  ) 
+
+alluvial_data <- data_avg_gini |>
+  select(country, period, gini_type) |> pivot_wider(names_from = period,values_from = gini_type) |>
+    mutate(
+    `1950-1975` = replace_na(`1950-1975`, "Missing"),
+    `1975-2000` = replace_na(`1975-2000`, "Missing"),
+    `2000-2022` = replace_na(`2000-2022`, "Missing")
+  ) |>
+  group_by(`1950-1975`,`1975-2000`,`2000-2022`) |> summarise(Freq=n())
+
+alluvial_data <- alluvial_data |>
+  mutate(
+    `1950-1975` = factor(`1950-1975`, levels = c("High", "Mid", "Low", "Missing")),
+    `1975-2000` = factor(`1975-2000`, levels = c("High", "Mid", "Low", "Missing")),
+    `2000-2022` = factor(`2000-2022`, levels = c("High", "Mid", "Low", "Missing"))
+  )
+
+
+ggplot(alluvial_data,aes(axis1=`1950-1975`,axis2=`1975-2000`,axis3=`2000-2022`,y=Freq)) + 
+  geom_flow(aes(fill = `2000-2022`)) +
+  geom_stratum() + 
+  geom_text(stat="stratum", aes(label=paste(after_stat(stratum), 
+                                           "\n", after_stat(count))),size = 2) +
+  scale_x_discrete(limits = c("1950-1975", "1975-2000", "2000-2022"), 
+                   expand = c(0.15, 0.15)) +
+  theme(plot.title = element_text(hjust=0.5))+  
+  scale_fill_manual(
+    values = c("Missing"="#d9d9d9","Low" = "#fecc5c", "Mid" = "#fd8d3c", "High" = "#e31a1c"),  # 顺序颜色
+    name = "Gini Type"  # 图例标题
+  )+
+    labs(
+    title = "Alluvial Plot of Gini Trends Across Periods",
+    x = "Time Period",
+    y = "Frequency"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+
+
+
+```
+
+
 
 ## Yijian Plotly
 ```{r}
