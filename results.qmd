@@ -1,4 +1,5 @@
 # Results
+
 ```{r}
 library(readxl)
 library(ggplot2)
@@ -10,8 +11,6 @@ data_nomissing <- data[rowSums(is.na(data)) <= 4, ]
 data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale == 'Per capita', resource == 'Income (net)')
 ```
 
-
-
 ```{r}
 #| fig-height: 17
 #| fig-width: 10
@@ -19,7 +18,7 @@ data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-
+library(RColorBrewer)
 data_median <- data |>
   group_by(country, year) |>        
   arrange(desc(!is.na(gini)),desc(!is.na(gini)),desc(popcovr == "All"),resource == "Earnings") |>
@@ -35,9 +34,11 @@ data_avg <- data_median |>
   group_by(country, period) |>
   summarise(avg_gini = mean(gini, na.rm = TRUE), .groups = "drop") |>
   pivot_wider(names_from = period, values_from = avg_gini) |>
+  left_join(data_median |> select(country, region_un_sub) |> distinct(), by = "country") |>
   mutate(has_recent_data = ifelse(is.na(`2000-2022`), 0, 1)) |>
   arrange(has_recent_data, `2000-2022`) |>
-  mutate(country_order = factor(country, levels = country)) 
+  mutate(country_order = factor(country, levels = country))
+
 
 ggplot(data_avg, aes(y = country_order)) +
   geom_point(aes(x = `2000-2022`, color = "2000-2022"), size = 2) +
@@ -46,77 +47,92 @@ ggplot(data_avg, aes(y = country_order)) +
     aes(x = `1950-2000`, xend = `2000-2022`, y = country_order, yend = country_order),
     color = "gray"
   ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 8),
+    legend.position = "right",
+    legend.title = element_text(size = 10), 
+    legend.text = element_text(size = 9)   
+  ) +
   labs(
     title = "Comparison of Average Gini Coefficients (1950-2000 vs 2000-2022)",
     x = "Average Gini Coefficient",
     y = "Country",
     color = "Period"
   ) +
-  theme_minimal() +
-  theme(
-    axis.text.y = element_text(size = 8),  
-    legend.position = "right",             
-    legend.title = element_text(size = 10), 
-    legend.text = element_text(size = 9)   
-  ) +
   scale_color_manual(values = c("1950-2000" = "red", "2000-2022" = "blue"))
 ```
-```{r}
-#| fig-height: 10
-#| fig-width: 10
-library(ggrepel)
-n <- 5
 
+#### How Gini of countries has been changed from 1950-2000 to 2000-2022
+
+1.Looking at the graph in general, we can see that Gini trends vary across countries and regions. Inequality has risen in some countries, while it has remained relatively stable or even fallen in others, reflecting the impact of global economic developments and policy differences.
+
+2.Most countries have both 1950-2000 and 2000-2022 data. However, some countries face the problem of missing data for the most recent period in 2000-2022.
+
+3.Some countries still remain high `Gini` in these two periods including `South Africa`,`Hajti` and `Brazil`. Among countries with the highest Gini Coefficient, more countries have some degree of increase in Gini while only a few countries improve their inequality and reduce the Gini coefficient like `Nambia` and `Zambia`.
+
+4.  Countries with similar Gini Coefficients often have common features in their economic structure, policy choices, or regional influences. For example, Latin American countries generally have high Gini Coefficients, while Western European countries have relatively low Gini
+
+5.  Across all countries, there more countries having Gini dramatically decreased or remaining stable compared to those encountering huge increase in Gini. So it reflects most countries did well in controlling the income inequality.
+
+```{r}
+
+library(ggrepel)
+# 根据最大 GDP 选取每个 region_un 的前 5 个国家
 top_countries_by_region <- data_median |>
   group_by(region_un, country) |>
-  summarise(gini_range = max(gini, na.rm = TRUE) - min(gini, na.rm = TRUE), .groups = "drop") |>
+  summarise(max_gdp = max(gdp, na.rm = TRUE), .groups = "drop") |>
   group_by(region_un) |>
-  slice_max(gini_range, n = n) |>
+  slice_max(max_gdp, n = n) |>
   pull(country)
 
+# 筛选出前 5 个国家的数据
 filtered_data <- data_median |>
   filter(country %in% top_countries_by_region)
 
+# 获取起始年份的数据点
 start_points <- filtered_data |>
   group_by(region_un, country) |>
   filter(year == min(year)) |>
   ungroup()
 
+# 绘图
 ggplot(filtered_data, aes(x = year, y = gini)) +
-  geom_point(aes(color = country), size = 1) +
-  geom_smooth(aes(color = country), method = "loess", se = FALSE, size = 1.2, linetype = "solid") +
-  #geom_line(aes(group = country, color = country)) +
+  geom_point(aes(color = country), size = 0.5) +
+  geom_line(aes(group = country, color = country)) +
   geom_text_repel(
     data = start_points,
-    aes(label = country,color = country),
-    size = 3,                  
-    max.overlaps = 8,        
-    force = 1,                 
-    nudge_x = 3,               
-    direction = "both",       
-    segment.color = "gray50",  
-    segment.size = 0.5,        
-    segment.curvature = -0.2,  
-    segment.ncp = 5,           
-    segment.angle = 90            
+    aes(label = country, color = country),
+    size = 3,
+    max.overlaps = 8,
+    direction = "both",
+    segment.color = "gray50"
   ) +
-  facet_wrap(~ region_un, scales = "free",ncol=2) +
+  facet_wrap(~ region_un, scales = "free_x", ncol = 2) +
   labs(
-    title = paste("Top", n, "Countries by Gini Coefficient Range in Each Region"),
+    title = paste("Top", n, "Countries by Maximum GDP in Each Region"),
     x = "Year",
     y = "Gini Coefficient",
     color = "Country"
   ) +
   theme_minimal() +
   theme(
-    legend.position = "None", 
-    legend.text = element_text(size = 8), 
-    strip.text = element_text(size = 10) 
+    legend.position = "None",
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 10)
   )
 ```
 
+#### How Gini of Top 5 Countries by GDP in Each Region evlovs through time
 
+In this question, we want to sample top 5 countries with the highest gdp for each regions and explore how their Gini changed over time so we can have a deeper understand of relationship between the Gini mode and regions.
 
+  
+1.  It is surprising to see that the top countries in each region have similar trends of Gini. In particular, top countries in European have almost the same trends of Gini and each Gini line stays really close to each other. This is could resulted in because of the close cooperation and connections between these European countries.
+
+2. Africa and Asia exhibit more volatile patterns compared to the relatively stable trends in Europe and Americas. And Countries in Africa generally have high Gini and `Gabon` even reached gini of 70 which indicates a severe income inequality.
+
+3.Generally speaking, Developed economics like United States,Canada and Australia demonstrate relatively stable Gini Coefficients while The Gini coefficients in developing regions (such as Africa and Asia) are higher and more volatile, which may reflect differences in economic structure, government policies, and social distribution systems among regions.
 
 
 
@@ -171,6 +187,7 @@ ggplot(data_us, aes(x = year)) +
     legend.text = element_text(size = 10)        
   )
 ```
+
 ```{r}
 data_us <- data_median |>
   filter(country == "China") |>
@@ -220,7 +237,6 @@ ggplot(data_us, aes(x = year)) +
     legend.text = element_text(size = 10)        
   )
 ```
-
 
 ```{r}
 
@@ -273,7 +289,6 @@ ggplot(data_us, aes(x = year)) +
     legend.text = element_text(size = 10)        
   )
 ```
-
 
 ```{r}
 coun <- "Burkina Faso"
@@ -379,4 +394,5 @@ ggplot(data_us, aes(x = year)) +
     legend.text = element_text(size = 10)        
   )
 ```
-```
+
+\`\`\`
