@@ -1,10 +1,12 @@
 # Results
 
 Each of these visualizations combines multiple related aspects into a single, coherent graph that tells a more complete story about different aspects of global inequality.
+
 ```{r,setups,include=FALSE}
 library(readxl)
 library(tidyverse)
 library(patchwork)
+library(ggrepel)
 
 knitr::opts_chunk$set(
   warning = FALSE,
@@ -12,33 +14,22 @@ knitr::opts_chunk$set(
 )
 
 data <- read_excel("WIID_28NOV2023.xlsx")
-
+data <- data |>
+  mutate(region_un = ifelse(country == "Turkiye", "Europe", region_un))
 ```
 
 ## **Global Income Inequality Trends Visualization**
 
-This visualization presents a comprehensive analysis of global income inequality data from 1900 to 2022, structured in three panels:
+This visualization presents global income inequality data from 1900 to 2022, structured in two complementary panels:
 
-1. **Top Panel - Data Coverage** (Area Chart)
-   - Shows the number of observations over time
-   - Stacked by different resource types (Consumption, Earnings, Income variants)
-   - Illustrates the increasing data availability in recent decades
+1.  **Top Panel - Data Coverage** shows the evolving number of observations across different resource types (Consumption, Earnings, and Income variants), highlighting the dramatic increase in data collection since 1980.
 
-2. **Middle Panel - Inequality Trends** (Line Plot)
-   - Displays average Gini coefficient trends for each resource type
-   - Features smoothed trend lines to show long-term patterns
-   - Demonstrates how inequality measures vary across different resource definitions
+2.  **Bottom Panel - Data Quality** reveals the composition and reliability of measurements over time, with proportions of high, average, and low-quality data for each resource category.
 
-3. **Bottom Panel - Data Quality** (Faceted Area Chart)
-   - Presents the proportion of quality ratings over time
-   - Separated by resource type for detailed comparison
-   - Helps assess the reliability of the inequality measurements
+Together, these panels demonstrate not only the expanding scope of inequality measurement but also improvements in data quality, providing context for understanding global economic disparities and their measurement over the past century.
 
-The visualization combines these elements to provide insights into both the trends in global inequality and the evolving nature of its measurement and data quality.
+```{r,fig.width=12, fig.height=7, message=FALSE}
 
-Note: The Gini coefficient ranges from 0 (perfect equality) to 100 (perfect inequality), with higher values indicating greater inequality.
-
-```{r, data-prepartion}
 # ------------------------------------------------------------------------
 # DATA PREPARATION
 # ------------------------------------------------------------------------
@@ -60,31 +51,15 @@ obs_counts <- data |>
  filter(!is.na(resource), !is.na(year), 
         year >= 1900, year <= 2022)
 
-# Calculate average Gini coefficients and related statistics
-# Modify summary statistics by adding/removing from summarise()
-gini_trends <- data |>
- filter(!is.na(resource), !is.na(gini), !is.na(year),
-        year >= 1900, year <= 2022) |>
- group_by(year, resource) |>
- summarise(
-   mean_gini = mean(gini, na.rm = TRUE),
-   sd_gini = sd(gini, na.rm = TRUE),
-   n = n(),
-   .groups = 'drop'
- )
 
-# Calculate quality composition proportions
-# Results in proportions of each quality rating by year and resource
 quality_comp <- data |>
- filter(!is.na(resource), !is.na(quality), !is.na(year),
-        year >= 1900, year <= 2022) |>
- count(year, resource, quality) |>
- group_by(year, resource) |>
- mutate(prop = n/sum(n))
-```
+  filter(!is.na(resource), !is.na(quality), !is.na(year),
+         year >= 1900, year <= 2022) |>
+  group_by(year, resource) |>
+  count(quality) |>
+  mutate(prop = n / sum(n)) |>  # This ensures proportions sum to 1
+  ungroup()
 
-
-```{r,color-definitions}
 # ------------------------------------------------------------------------
 # COLOR DEFINITIONS
 # ------------------------------------------------------------------------
@@ -105,9 +80,7 @@ quality_colors <- c(
  "Low" = "#C8E6C9",       # Light green
  "Not known" = "#EEEEEE"  # Light grey
 )
-```
 
-```{r,plot-creation}
 # ------------------------------------------------------------------------
 # PLOT CREATION
 # ------------------------------------------------------------------------
@@ -132,36 +105,13 @@ p1 <- ggplot(obs_counts, aes(x = year, y = n, fill = resource)) +
     plot.subtitle = element_text(size = 11, color = "grey30")
   )
 
-# Middle panel: Gini coefficient trends
-# Modify smoothing span, line alpha, or axis breaks as needed
-p2 <- ggplot(gini_trends, aes(x = year, y = mean_gini, color = resource)) +
-  geom_smooth(se = FALSE, span = 0.3) +
-  geom_line(alpha = 0.4) +
-  scale_color_manual(values = resource_colors) +
-  scale_x_continuous(breaks = seq(1900, 2020, 40)) +
-  scale_y_continuous(breaks = seq(25, 65, 10)) +
-  labs(title = "Global Average Gini Coefficient Trends",
-       subtitle = "Smoothed trends of inequality measures across different resource types",
-       y = "Average Gini\nCoefficient", 
-       x = NULL) +
-  theme_minimal() +
-  theme(
-    legend.position = "none",
-    axis.text = element_text(size = 10),
-    axis.title = element_text(size = 12),
-    plot.title = element_text(size = 14, face = "bold"),
-    plot.subtitle = element_text(size = 11, color = "grey30")
-  )
-
-# Bottom panel: Quality composition
-# Modify facet layout, spacing, or text sizes as needed
 p3 <- ggplot(quality_comp, aes(x = year, y = prop, fill = quality)) +
-  geom_area(position = "stack", alpha = 0.8) +
+  geom_area(position = "fill", alpha = 0.8) +  # Changed to position = "fill"
   facet_wrap(~resource, ncol = 5, scales = "free_x") +
   scale_fill_manual(values = quality_colors, name = "Quality") +
   scale_x_continuous(breaks = c(1900, 2000)) +
   scale_y_continuous(labels = scales::percent_format(), 
-                    breaks = seq(0, 1, 0.5)) +
+                    breaks = seq(0, 1, 0.25)) +
   labs(title = "Data Quality Composition by Resource Type",
        subtitle = "Proportion of quality ratings over time for each resource category",
        y = "Proportion of\nQuality Ratings", 
@@ -178,17 +128,12 @@ p3 <- ggplot(quality_comp, aes(x = year, y = prop, fill = quality)) +
     plot.subtitle = element_text(size = 11, color = "grey30")
   )
 
-# ------------------------------------------------------------------------
-# COMBINE PLOTS AND ADD TITLE
-# ------------------------------------------------------------------------
-# Combine plots with specified height ratios
-# Modify heights to change relative size of panels
-combined_plot <- (p1 / plot_spacer() / p2 / plot_spacer() / p3) +
-  plot_layout(heights = c(1, 0.1, 1.5, 0.1, 1)) &  # The 0.1 values create spacing
+# Combine only p1 and p3
+combined_plot <- (p1 / plot_spacer() / p3) +
+  plot_layout(heights = c(1, 0.1, 1)) &  # Adjusted heights for two plots
   theme(plot.margin = margin(5, 5, 5, 5))
 
-
-# Add main title to combined plot
+# Add main title
 combined_plot <- combined_plot +
   plot_annotation(
     title = "Global Income Inequality Trends",
@@ -204,91 +149,226 @@ combined_plot <- combined_plot +
       )
     )
   )
-```
 
-
-```{r,fig.width=12, fig.height=10, message=FALSE}
 combined_plot
 ```
-Data coverage shows a dramatic increase in inequality measurements worldwide since 1980, reflecting growing attention to tracking economic disparities. The Gini coefficient trends reveal that income inequality has generally decreased from the high levels of the 1940s, though with notable variations across different types of measurements. The quality of data has improved substantially over time, with a higher proportion of high-quality measurements in recent decades.
 
-Looking deeper into the trends, several interesting patterns emerge:
+These visuals show a dramatic increase in the volume and quality of global inequality data over time. Before 1980, there were few observations and limited reliability. Since then, the number of measurements has surged, reaching nearly a thousand annually. At the same time, the proportion of high-quality data across all income and consumption categories has steadily grown. Together, these trends offer a far clearer and more dependable understanding of worldwide income inequality today than ever before.
 
-- Income inequality was highest in the mid-20th century (1940s-1950s) with Gini coefficients around 55, suggesting extreme economic disparities during the post-war period.
+## **Global Income Inequality by Economic Development Level**
 
-- While overall inequality has decreased since then, the decline hasn't been uniform. Net income measurements show the lowest inequality levels (around 35), while gross income and earnings measurements indicate higher disparities.
+This visualization highlights how average income inequality relates to countries’ economic development since 2000. Each boxplot represents a World Bank income classification, with points indicating the mean Gini coefficient for individual countries over the period. A dashed line denotes the global median Gini value for easy reference, and labels draw attention to particularly high-inequality cases. By focusing on long-term averages rather than year-by-year data, the plot unveils enduring patterns in how typical inequality levels differ across varying stages of economic development.
 
-- The recent uptick in inequality measures since 2000, particularly in earnings and gross income, suggests that economic growth may be coinciding with widening income gaps in some areas, despite overall historical improvements.
+*Note: Higher Gini coefficients indicate greater income inequality (scale: 0–100). The underlying data prioritizes comprehensive national measures over partial or earnings-based observations.*
 
-This analysis challenges the simple notion that economic development automatically reduces inequality, suggesting instead that the relationship between growth and inequality is complex and likely influenced by policy choices and measurement approaches.
+```{r,fig.width=12, fig.height=7, warning=FALSE}
+income_gini <- data |> 
+  # Prioritize data sources
+  group_by(country, year) |> 
+  arrange(desc(!is.na(gini)),
+          desc(popcovr == "All"),
+          resource == "Earnings") |>
+  slice(1) |> 
+  ungroup() |>
+  filter(!is.na(gini), 
+         year >= 2000) |>
+  mutate(
+    incomegroup = factor(incomegroup, 
+                         levels = c("High income", "Upper middle income", 
+                                    "Lower middle income", "Low income"),
+                         ordered = TRUE)
+  ) |>
+  filter(!is.na(incomegroup)) |>
+  # Include region_un in the grouping
+  group_by(country, incomegroup, region_un) |>
+  summarize(
+    gini = mean(gini),
+    n_obs = n(),
+    .groups = "drop"
+  ) |>
+  # Identify outliers
+  group_by(incomegroup) |>
+  mutate(
+    is_outlier = gini > quantile(gini, 0.75) + 1.5 * IQR(gini) | 
+                 gini < quantile(gini, 0.25) - 1.5 * IQR(gini),
+    label = ifelse(is_outlier & gini > quantile(gini, 0.98), country, NA)
+  ) |>
+  ungroup()
 
-## **Geographic Inequality Distribution**
-   - Center: World choropleth map of Gini coefficients
-   - Side panels: Regional box plots
-   - Small multiples: Time series for each continent
-   - Color coding by World Bank income groups
-   - Annotations for notable outliers
+global_median <- median(income_gini$gini, na.rm = TRUE)
 
-## **Income Group Analysis Dashboard**
-   - Top: Parallel coordinates plot across income groups
-   - Middle: Box plots comparing all inequality measures
-   - Bottom: Time series showing convergence/divergence
-   - Faceted by time periods (decades)
-   - Interactive elements to highlight specific countries
+income_gini_boxplot <- ggplot(income_gini, aes(x = gini, y = incomegroup)) +
+  geom_vline(xintercept = global_median,
+             linetype = "dashed", color = "red", alpha = 0.7) +
+  # Color points by region_un
+  geom_jitter(aes(color = region_un),
+              alpha = 1,
+              height = 0.2, 
+              size = 1,
+              width = 0.3) +
+  geom_boxplot(fill = "white", 
+               alpha = 0.3, 
+               outlier.shape = NA,
+               width = 0.5) +
+  geom_text_repel(
+    aes(label = label),
+    na.rm = TRUE,
+    size = 3,
+    max.overlaps = 8,
+    box.padding = 0.5,
+    force = 10
+  ) +
+  scale_color_brewer(palette = "Set2", name = "UN Region") +
+  labs(
+    title = "Global Income Inequality by Country Income Level (2000-present)",
+    subtitle = paste0("Distribution of average Gini coefficients across different income groups\n",
+                      "Global median (dashed line): ", round(global_median, 1),
+                      "\nBased on ", n_distinct(income_gini$country), " countries"),
+    x = "Gini Coefficient",
+    y = NULL
+  ) +
+  scale_x_continuous(breaks = seq(20, 80, 10)) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
+    axis.text = element_text(size = 11),
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 14, face = "bold", margin = margin(b = 10)),
+    plot.subtitle = element_text(size = 11, color = "grey30", margin = margin(b = 20))
+  )
 
-## **Measurement Methodology Impact**
-   - Main: Scatter plot comparing income vs. consumption Gini
-   - Side: Density plots for each measure
-   - Panels: Quality rating distribution
-   - Faceted by decades and regions
-   - Regression lines showing systematic differences
+income_gini_boxplot
 
-## **Development-Inequality Relationship**
-   - Center: GDP per capita vs. Gini scatter plot
-   - Trajectories for selected countries over time
-   - Color coding by region
-   - Size by population
-   - Faceted by time periods
 
-## **Inequality Measures Correlation Matrix**
-   - Upper triangle: Scatter plots
-   - Lower triangle: Correlation coefficients
-   - Diagonal: Density plots
-   - Faceted by resource type
-   - Color coded by quality rating
+```
 
-## **Regional Inequality Dynamics**
-   - Main: Regional trend lines
-   - Background: Individual country trajectories
-   - Confidence bands showing variation
-   - Annotations for major economic events
-   - Faceted by World Bank classification
+Overall, the analysis shows that richer countries tend to have lower income inequality on average, while poorer countries often have levels closer to or above the global median. The plot also highlights a few specific nations with especially high inequality. Together, these patterns suggest that as a country becomes more economically developed, it generally experiences more moderate, though not universally low, income inequality.
 
-## **Quality Assessment Overview**
-   - Center: Heat map of quality by region and time
-   - Margins: Quality distribution summaries
-   - Overlay: Data coverage indicators
-   - Faceted by resource type
-   - Highlighted cells for key patterns
+## **Economic Development and Income Inequality Analysis**
 
-## **Income Share Distribution Analysis**
-   - Main: Decile share stacked area charts
-   - Side: Lorenz curves over time
-   - Bottom: Palma ratio evolution
-   - Faceted by region
-   - Trend lines for key percentiles
+This visualization examines the relationship between economic development (GDP per capita) and income inequality (Gini coefficient) across different regions. For each decade since 2000, we track the three countries with highest and lowest inequality from each region, taking into account population size. The dual-panel view allows us to contrast patterns between high and low inequality countries, revealing how economic development relates to income distribution across different contexts.
 
-## **Methodological Consistency Analysis**
-    - Primary: Consistency scores across sources
-    - Secondary: Method changes over time
-    - Supporting: Coverage quality metrics
-    - Faceted by region and income group
-    - Highlighted methodology transitions
+Note: GDP per capita is shown on a logarithmic scale to better display relationships across different income levels. Point size indicates population.
 
-## **Population-Weighted Analysis**
-    - Main: Population-weighted vs. unweighted measures
-    - Side: Population coverage percentages
-    - Bottom: Bias indicators
-    - Faceted by decade
-    - Uncertainty bands
+```{r,fig.width=15, fig.height=10, warning=FALSE}
+# First, get preferred gini values by prioritizing
+data_clean <- data |> 
+  group_by(country, year) |> 
+  arrange(desc(!is.na(gini)),
+         desc(popcovr == "All"),
+         resource == "Earnings") |>
+  slice(1) |> 
+  ungroup()
 
+# Function to get top/bottom 3 countries for each region in a given decade
+get_extreme_countries <- function(data, decade_start, is_top = TRUE) {
+  ordering_fn <- if(is_top) slice_max else slice_min
+  
+  data |>
+    filter(year >= decade_start, 
+           year < decade_start + 10,
+           !is.na(gini), 
+           !is.na(gdp), 
+           !is.na(population),
+           !is.na(region_un)) |>
+    group_by(region_un, country) |>
+    summarize(
+      gini = mean(gini),
+      gdp = mean(gdp),
+      population = mean(population),
+      .groups = "drop"
+    ) |>
+    group_by(region_un) |>
+    ordering_fn(order_by = gini, n = 3, with_ties = FALSE) |>
+    mutate(decade = paste0(decade_start, "s"))
+}
+
+# Get data for each decade
+top_data_2000 <- get_extreme_countries(data_clean, 2000, TRUE)
+top_data_2010 <- get_extreme_countries(data_clean, 2010, TRUE)
+top_data_2020 <- get_extreme_countries(data_clean, 2020, TRUE)
+bottom_data_2000 <- get_extreme_countries(data_clean, 2000, FALSE)
+bottom_data_2010 <- get_extreme_countries(data_clean, 2010, FALSE)
+bottom_data_2020 <- get_extreme_countries(data_clean, 2020, FALSE)
+
+# Combine all data
+plot_data <- bind_rows(
+  top_data_2000, top_data_2010, top_data_2020,
+  bottom_data_2000, bottom_data_2010, bottom_data_2020
+) |>
+  mutate(
+    log_gdp = log10(gdp),
+    pop_scaled = sqrt(population)/10000,
+    type = ifelse(gini > median(gini), "High Inequality", "Low Inequality")
+  )
+
+gdp_range <- range(plot_data$log_gdp, na.rm = TRUE)
+x_limits <- c(floor(gdp_range[1]), ceiling(gdp_range[2]))
+
+# Modify both plots to use the same x-axis limits
+high_ineq_plot <- ggplot(
+  filter(plot_data, type == "High Inequality"), 
+  aes(x = log_gdp, y = gini)
+) +
+  geom_point(aes(size = pop_scaled, color = region_un), alpha = 0.7) +
+  geom_text_repel(aes(label = country), size = 3) +
+  facet_wrap(~decade) +
+  scale_x_continuous(
+    limits = x_limits,  # Add this line
+    breaks = log10(c(1000, 10000, 100000)),
+    labels = c("1,000", "10,000", "100,000")
+  ) +
+  scale_size_continuous(
+    name = "Population (millions)",
+    breaks = sqrt(c(100, 500, 1000))/10000,
+    labels = c("100M", "500M", "1B")
+  ) +
+  scale_color_brewer(palette = "Set2") +
+  labs(
+    title = "Highest Inequality Countries by Region",
+    x = "GDP per capita (USD, log scale)",
+    y = "Gini Coefficient",
+    color = "Region"
+  ) +
+  theme_minimal() +
+  theme(panel.spacing.x = unit(1, "cm"))
+
+low_ineq_plot <- ggplot(
+  filter(plot_data, type == "Low Inequality"), 
+  aes(x = log_gdp, y = gini)
+) +
+  geom_point(aes(size = pop_scaled, color = region_un), alpha = 0.7) +
+  geom_text_repel(aes(label = country), size = 3) +
+  facet_wrap(~decade) +
+  scale_x_continuous(
+    limits = x_limits,  # Add this line
+    breaks = log10(c(1000, 10000, 100000)),
+    labels = c("1,000", "10,000", "100,000")
+  ) +
+  scale_size_continuous(
+    name = "Population (millions)",
+    breaks = sqrt(c(100, 500, 1000))/10000,
+    labels = c("100M", "500M", "1B")
+  ) +
+  scale_color_brewer(palette = "Set2") +
+  labs(
+    title = "Lowest Inequality Countries by Region",
+    x = "GDP per capita (USD, log scale)",
+    y = "Gini Coefficient",
+    color = "Region"
+  ) +
+  theme_minimal() +
+  theme(panel.spacing.x = unit(1, "cm"))
+
+# Combine plots vertically
+scatter_gini_gdp <- high_ineq_plot / low_ineq_plot +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "right")
+
+scatter_gini_gdp
+```
+
+This visualization highlights two key stories in global inequality over the past two decades. The top panels feature the most unequal nations, where countries like South Africa consistently rank at the top, joined by a mix of both wealthier and lower-income economies. The bottom panels show the least unequal societies, many of which are European, but also include lower-income countries such as Kyrgyzstan and Ethiopia—suggesting that prosperity alone does not guarantee greater equality.
+
+Overall, these patterns challenge the assumption that higher income levels automatically lead to less inequality. Instead, the distribution of income appears more influenced by domestic policies, institutions, and social choices than by economic status alone.
