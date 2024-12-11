@@ -60,7 +60,6 @@ ggplot(data_avg, aes(y = country_order)) +
     legend.text = element_text(size = 9)   
   ) +
   scale_color_manual(values = c("1950-2000" = "red", "2000-2022" = "blue"))
-
 ```
 ```{r}
 #| fig-height: 10
@@ -85,7 +84,8 @@ start_points <- filtered_data |>
 
 ggplot(filtered_data, aes(x = year, y = gini)) +
   geom_point(aes(color = country), size = 1) +
-  geom_line(aes(group = country, color = country)) +
+  geom_smooth(aes(color = country), method = "loess", se = FALSE, size = 1.2, linetype = "solid") +
+  #geom_line(aes(group = country, color = country)) +
   geom_text_repel(
     data = start_points,
     aes(label = country,color = country),
@@ -325,4 +325,58 @@ ggplot(data_us, aes(x = year)) +
     legend.title = element_text(size = 12),      
     legend.text = element_text(size = 10)        
   )
+```
+
+```{r}
+
+coun <- "South Africa"
+
+data_us <- data_median |>
+  filter(country == coun) |>
+  select(year, gini, gdp) |>
+  arrange(year) 
+
+
+data_us <- data_us |>
+  mutate(
+    year_diff = year - lag(year),
+    gdp_growth = ifelse(
+      !is.na(year_diff) & year_diff > 0,  
+      (gdp / lag(gdp))^(1 / year_diff) * 100 - 100,  
+      NA 
+    )
+  ) |>
+  select(-year_diff) 
+
+
+ggplot(data_us, aes(x = year)) +
+  geom_line(aes(y = gini, color = "Gini Index"), size = 1) +
+  geom_point(aes(y = gini, color = "Gini Index"), size = 2) +
+  geom_line(aes(y = gdp_growth, color = "GDP Growth"), size = 1) +
+  geom_point(aes(y = gdp_growth, color = "GDP Growth"), size = 2) +
+  scale_y_continuous(
+    name = "Gini Index", 
+    sec.axis = sec_axis(~ ., name = "GDP Growth (%)")  
+  ) +
+  scale_color_manual(
+    name = "Indicator",
+    values = c("Gini Index" = "blue", "GDP Growth" = "red")
+  ) +
+  labs(
+    title = paste("GDP Growth and Gini Index Over Years for ",coun),
+    x = "Year"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y.left = element_text(size = 10),  
+    axis.text.y.right = element_text(size = 10), 
+    axis.text.x = element_text(size = 10),       
+    axis.title.y.left = element_text(size = 12), 
+    axis.title.y.right = element_text(size = 12),
+    plot.title = element_text(size = 14, face = "bold"), 
+    legend.position = "bottom",                  
+    legend.title = element_text(size = 12),      
+    legend.text = element_text(size = 10)        
+  )
+```
 ```
