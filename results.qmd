@@ -632,10 +632,14 @@ vcd::mosaic(gini_type ~ gdp_growth_speed + developed,
             labeling = vcd::labeling_border(rot_labels = c(45, -45, 0, 0)),
             main = "Mosaic Plot: GDP Class, Developed Status, and Gini Type")
 ```
+
+
 ```{r}
 library(ggalluvial)
+
+
 data_GDP <- data |>
-  group_by(country,year) |>        
+  group_by(country, year) |>        
   arrange(desc(!is.na(gini)),          
           desc(popcovr == "All"), 
           resource == "Earnings") |>
@@ -644,9 +648,9 @@ data_GDP <- data |>
 
 data_period <- data_GDP |>
   mutate(period = case_when(
-    year >= 1950 & year <= 1975 ~ "1950-1975",
-    year > 1975 & year <= 2000 ~ "1975-2000",
-    year > 2000 & year <= 2022 ~ "2000-2022",
+    year >= 1990 & year <= 2000 ~ "1990-2000",
+    year > 2000 & year <= 2010 ~ "2000-2010",
+    year > 2010 & year <= 2022 ~ "2010-2022",
     TRUE ~ NA_character_
   )) |>
   filter(!is.na(period))
@@ -662,40 +666,49 @@ data_avg_gini <- data_period |>
     )
   ) 
 
+
 alluvial_data <- data_avg_gini |>
-  select(country, period, gini_type) |> pivot_wider(names_from = period,values_from = gini_type) |>
-    mutate(
-    `1950-1975` = replace_na(`1950-1975`, "Missing"),
-    `1975-2000` = replace_na(`1975-2000`, "Missing"),
-    `2000-2022` = replace_na(`2000-2022`, "Missing")
+  select(country, period, gini_type) |> 
+  pivot_wider(names_from = period, values_from = gini_type) |>
+  mutate(
+    `1990-2000` = replace_na(`1990-2000`, "Missing"),
+    `2000-2010` = replace_na(`2000-2010`, "Missing"),
+    `2010-2022` = replace_na(`2010-2022`, "Missing")
   ) |>
-  group_by(`1950-1975`,`1975-2000`,`2000-2022`) |> summarise(Freq=n())
+  group_by(`1990-2000`, `2000-2010`, `2010-2022`) |> 
+  summarise(Freq = n())
+
 
 alluvial_data <- alluvial_data |>
   mutate(
-    `1950-1975` = factor(`1950-1975`, levels = c("High", "Mid", "Low", "Missing")),
-    `1975-2000` = factor(`1975-2000`, levels = c("High", "Mid", "Low", "Missing")),
-    `2000-2022` = factor(`2000-2022`, levels = c("High", "Mid", "Low", "Missing"))
+    `1990-2000` = factor(`1990-2000`, levels = c("High", "Mid", "Low", "Missing")),
+    `2000-2010` = factor(`2000-2010`, levels = c("High", "Mid", "Low", "Missing")),
+    `2010-2022` = factor(`2010-2022`, levels = c("High", "Mid", "Low", "Missing"))
   )
 
 
-ggplot(alluvial_data,aes(axis1=`1950-1975`,axis2=`1975-2000`,axis3=`2000-2022`,y=Freq)) + 
-  geom_flow(aes(fill = `2000-2022`)) +
+ggplot(alluvial_data, aes(axis1 = `1990-2000`, axis2 = `2000-2010`, axis3 = `2010-2022`, y = Freq)) + 
+  geom_flow(aes(fill = `2010-2022`)) +
   geom_stratum() + 
-  geom_text(stat="stratum", aes(label=paste(after_stat(stratum), 
-                                           "\n", after_stat(count))),size = 2) +
-  scale_x_discrete(limits = c("1950-1975", "1975-2000", "2000-2022"), 
-                   expand = c(0.15, 0.15)) +
-  theme(plot.title = element_text(hjust=0.5))+  
+  geom_text(
+    stat = "stratum", 
+    aes(label = paste(after_stat(stratum), "\n", after_stat(count))), 
+    size = 2
+  ) +
+  scale_x_discrete(
+    limits = c("1990-2000", "2000-2010", "2010-2022"), 
+    expand = c(0.15, 0.15)
+  ) +
   scale_fill_manual(
-    values = c("Missing"="#d9d9d9","Low" = "#fecc5c", "Mid" = "#fd8d3c", "High" = "#e31a1c"),  # 顺序颜色
-    name = "Gini Type"  # 图例标题
-  )+
-    labs(
+    values = c("Missing" = "#d9d9d9", "Low" = "#fecc5c", "Mid" = "#fd8d3c", "High" = "#e31a1c"),
+    name = "Gini Type"
+  ) +
+  labs(
     title = "Alluvial Plot of Gini Trends Across Periods",
     x = "Time Period",
     y = "Frequency"
   ) +
+  theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5),
     axis.title = element_text(size = 12),
@@ -703,8 +716,6 @@ ggplot(alluvial_data,aes(axis1=`1950-1975`,axis2=`1975-2000`,axis3=`2000-2022`,y
     legend.title = element_text(size = 12),
     legend.text = element_text(size = 10)
   )
-
-
 
 ```
 
@@ -867,7 +878,7 @@ start_points <- filtered_data |>
 
 ggplot(filtered_data, aes(x = year, y = gini)) +
   geom_point(aes(color = country), size = 0.5) +
-  geom_line(aes(group = country, color = country)) +
+  geom_smooth(aes(group = country,color=country), method = "loess", se = FALSE, size = 1, linetype = "solid") +
   geom_text_repel(
     data = start_points,
     aes(label = country, color = country),
@@ -892,15 +903,15 @@ ggplot(filtered_data, aes(x = year, y = gini)) +
 ```
 
 ```{r, fig.width=10, fig.height=14, warning=FALSE}
-n <- 5  # 选择每个区域 GDP 最低的国家数量
+n <- 5  
 
-# Step 1: 筛选每个国家至少有 5 个数据点
+
 filtered_by_points <- data_median |>
   group_by(region_un, country) |>
-  filter(n() >= 5) |>  # 确保每个国家至少有 5 个点
+  filter(n() >= 5) |>  
   ungroup()
 
-# Step 2: 按最小 GDP 筛选每个区域的前 n 个国家
+
 bottom_countries_by_region <- filtered_by_points |>
   group_by(region_un, country) |>
   summarise(min_gdp = min(gdp, na.rm = TRUE), .groups = "drop") |>
@@ -908,20 +919,20 @@ bottom_countries_by_region <- filtered_by_points |>
   slice_min(min_gdp, n = n) |>
   pull(country)
 
-# Step 3: 筛选出前 n 个国家的数据
+
 filtered_data <- filtered_by_points |>
   filter(country %in% bottom_countries_by_region)
 
-# Step 4: 获取起始年份的数据点（用于标注国家名称）
+
 start_points <- filtered_data |>
   group_by(region_un, country) |>
   filter(year == min(year)) |>
   ungroup()
 
-# Step 5: 绘制图表
+
 ggplot(filtered_data, aes(x = year, y = gini)) +
   geom_point(aes(color = country), size = 0.5) +
-  geom_line(aes(group = country, color = country)) +
+   geom_smooth(aes(group = country,color=country), method = "loess", se = FALSE, size = 1, linetype = "solid") +
   geom_text_repel(
     data = start_points,
     aes(label = country, color = country),
