@@ -5,6 +5,11 @@ library(readxl)
 library(ggplot2)
 library(tidyverse)
 data <- read_excel("WIID_28NOV2023.xlsx")
+
+
+data$c3 <- ifelse(data$country == "Kosovo", "KOS", data$c3)
+data <- data[!data$c3 %in% c("CSK", "REU", "SCG", "SUN", "YUG"), ]
+
 data_nomissing <- data[rowSums(is.na(data)) <= 4, ]
 data_allpopuallarea <- data |> filter(popcovr == 'All', areacovr == 'All', scale == 'Per capita', resource == 'Income (net)')
 ```
@@ -161,20 +166,6 @@ ggplot(data_US_long, aes(x = factor(year))) +
 ```
 
 ```{r, fig.width=15, fig.height=15}
-data_US <- data |> filter(country != 'United Satates', resource != 'Incasdome (gross)')
-
-data_gini <- data_US %>%
-  group_by(country, year) %>%         
-  arrange(desc(!is.na(gini)),
-          desc(!is.na(q1)),            
-          desc(popcovr == "All"), 
-          resource == "Earnings") %>% 
-  slice(1) %>%                        
-  ungroup()  
-data_gini_2022 <- data_gini |> filter(year == 2019)
-
-
-
 library(ggplot2)
 library(dplyr)
 library(sf)
@@ -183,19 +174,36 @@ library(rnaturalearthdata)
 library(viridis)
 library(RColorBrewer)
 
+data_gini_all_year <- data |> filter(country != 'United Satates', resource != 'Incasdome (gross)')
+
+data_gini_all_year <- data_gini_all_year %>%
+  group_by(country, year) %>%         
+  arrange(desc(!is.na(gini)),
+          desc(!is.na(q1)),            
+          desc(popcovr == "All"), 
+          resource == "Earnings") %>% 
+  slice(1) %>%                        
+  ungroup()  
+data_gini_2022 <- data_gini_all_year |> filter(year == 2017)
+
+
 # Data frame with Gini Index
 data_gini <- data.frame(
   country = data_gini_2022$country, 
-  gini = data_gini_2022$gini
+  gini = data_gini_2022$gini,
+  c3 = data_gini_2022$c3,
+  postal = data_gini_2022$c2
 )
+
 
 # Get world map data
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
 # Rename `name_long` to `country` for matching and join
 world <- world %>%
-  mutate(country = name_long) %>% # Create a new column named `country`
-  left_join(data, by = "country") # Perform the join
+  mutate(c3 = su_a3) %>% # Create a new column named `country`
+  mutate(country = name_long) %>%
+  left_join(data_gini, by = "c3") # Perform the join
 
 ggplot(data = world) +
   geom_sf(aes(fill = gini), color = "black", size = 0.2) +
@@ -216,3 +224,73 @@ ggplot(data = world) +
   )
 
 ```
+
+
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(sf)
+library(rnaturalearth)
+
+# Your dataset: Assuming it's called `data_all_year`
+# Structure: country, year, gini
+
+# Step 1: Get the list of all unique countries and years
+all_countries <- unique(data_gini_all_year$country)
+all_years <- seq(2015, 2020)
+
+# Step 2: Create a complete grid of country and year
+complete_grid <- expand.grid(country = all_countries, year = all_years)
+
+# Step 3: Join your dataset with the complete grid
+data_all_year_complete <- complete_grid %>%
+  left_join(data_gini_all_year, by = c("country", "year"))
+
+# Step 4: Load world map data
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Step 5: Prepare world map data for merging
+world <- world %>%
+  mutate(c3 = su_a3) %>%
+  mutate(country = name_long)
+
+# Step 6: Join the world map with the complete dataset
+world_data <- world %>%
+  left_join(data_all_year_complete, by = "country")
+
+# Step 7: Create the interactive plot with plotly
+plot <- ggplot(data = world_data) +
+  geom_sf(aes(fill = gini, frame = year), color = "black", size = 0.2) +
+  scale_fill_distiller(
+    palette = "RdYlGn",
+    direction = -1,
+    na.value = "gray90"  # Missing data shown in gray
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Gini Index by Country (Scrollable by Year)",
+    fill = "Gini Index"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
+  )
+
+# Convert ggplot to an interactive plotly object
+interactive_plot <- ggplotly(plot, tooltip = c("country", "gini")) %>%
+  animation_opts(
+    frame = 1,   # Duration of each frame in milliseconds
+    easing = "linear"
+  ) %>%
+  animation_slider(
+    currentvalue = list(prefix = "Year: ")
+  )
+
+interactive_plot
+
+```
+
