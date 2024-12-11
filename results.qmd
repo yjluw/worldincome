@@ -127,14 +127,13 @@ ggplot(filtered_data, aes(x = year, y = gini)) +
 
 In this question, we want to sample top 5 countries with the highest gdp for each regions and explore how their Gini changed over time so we can have a deeper understand of relationship between the Gini mode and regions.
 
-  
 1.  It is surprising to see that the top countries in each region have similar trends of Gini. In particular, top countries in European have almost the same trends of Gini and each Gini line stays really close to each other. This is could resulted in because of the close cooperation and connections between these European countries.
 
-2. Africa and Asia exhibit more volatile patterns compared to the relatively stable trends in Europe and Americas. And Countries in Africa generally have high Gini and `Gabon` even reached gini of 70 which indicates a severe income inequality.
+2.  Africa and Asia exhibit more volatile patterns compared to the relatively stable trends in Europe and Americas. And Countries in Africa generally have high Gini and `Gabon` even reached gini of 70 which indicates a severe income inequality.
 
 3.Generally speaking, Developed economics like United States,Canada and Australia demonstrate relatively stable Gini Coefficients while The Gini coefficients in developing regions (such as Africa and Asia) are higher and more volatile, which may reflect differences in economic structure, government policies, and social distribution systems among regions.
 
-
+#### Explore GDP growth and Gini in some countries
 
 ```{r}
 
