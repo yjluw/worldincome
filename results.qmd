@@ -21,7 +21,7 @@ library(tidyr)
 library(RColorBrewer)
 data_median <- data |>
   group_by(country, year) |>        
-  arrange(desc(!is.na(gini)),desc(!is.na(gini)),desc(popcovr == "All"),resource == "Earnings") |>
+  arrange(desc(!is.na(gini)),desc(popcovr == "All"),resource == "Earnings") |>
   slice(1) |> ungroup()  
 
 data_avg <- data_median |>
@@ -78,25 +78,32 @@ ggplot(data_avg, aes(y = country_order)) +
 ```{r}
 
 library(ggrepel)
-# 根据最大 GDP 选取每个 region_un 的前 5 个国家
-top_countries_by_region <- data_median |>
+n <-5
+
+filtered_by_points <- data_median |>
+  group_by(region_un, country) |>
+  filter(n() >= 5) |> 
+  ungroup()
+
+
+top_countries_by_region <- filtered_by_points |>
   group_by(region_un, country) |>
   summarise(max_gdp = max(gdp, na.rm = TRUE), .groups = "drop") |>
   group_by(region_un) |>
   slice_max(max_gdp, n = n) |>
   pull(country)
 
-# 筛选出前 5 个国家的数据
-filtered_data <- data_median |>
+
+filtered_data <- filtered_by_points |>
   filter(country %in% top_countries_by_region)
 
-# 获取起始年份的数据点
+
 start_points <- filtered_data |>
   group_by(region_un, country) |>
   filter(year == min(year)) |>
   ungroup()
 
-# 绘图
+
 ggplot(filtered_data, aes(x = year, y = gini)) +
   geom_point(aes(color = country), size = 0.5) +
   geom_line(aes(group = country, color = country)) +
@@ -132,6 +139,7 @@ In this question, we want to sample top 5 countries with the highest gdp for eac
 2.  Africa and Asia exhibit more volatile patterns compared to the relatively stable trends in Europe and Americas. And Countries in Africa generally have high Gini and `Gabon` even reached gini of 70 which indicates a severe income inequality.
 
 3.Generally speaking, Developed economics like United States,Canada and Australia demonstrate relatively stable Gini Coefficients while The Gini coefficients in developing regions (such as Africa and Asia) are higher and more volatile, which may reflect differences in economic structure, government policies, and social distribution systems among regions.
+
 
 #### Explore GDP growth and Gini in some countries
 
@@ -186,6 +194,8 @@ ggplot(data_us, aes(x = year)) +
     legend.text = element_text(size = 10)        
   )
 ```
+From the plot, we can see United States did well in controlling the income inequality
+
 
 ```{r}
 data_us <- data_median |>
@@ -393,5 +403,109 @@ ggplot(data_us, aes(x = year)) +
     legend.text = element_text(size = 10)        
   )
 ```
+```{r}
 
-\`\`\`
+
+coun <- "India"
+
+data_us <- data_median |>
+  filter(country == coun) |>
+  select(year, gini, gdp) |>
+  arrange(year) 
+
+
+data_us <- data_us |>
+  mutate(
+    year_diff = year - lag(year),
+    gdp_growth = ifelse(
+      !is.na(year_diff) & year_diff > 0,  
+      (gdp / lag(gdp))^(1 / year_diff) * 100 - 100,  
+      NA 
+    )
+  ) |>
+  select(-year_diff) 
+
+
+ggplot(data_us, aes(x = year)) +
+  geom_line(aes(y = gini, color = "Gini Index"), size = 1) +
+  geom_point(aes(y = gini, color = "Gini Index"), size = 2) +
+  geom_line(aes(y = gdp_growth, color = "GDP Growth"), size = 1) +
+  geom_point(aes(y = gdp_growth, color = "GDP Growth"), size = 2) +
+  scale_y_continuous(
+    name = "Gini Index", 
+    sec.axis = sec_axis(~ ., name = "GDP Growth (%)")  
+  ) +
+  scale_color_manual(
+    name = "Indicator",
+    values = c("Gini Index" = "blue", "GDP Growth" = "red")
+  ) +
+  labs(
+    title = paste("GDP Growth and Gini Index Over Years for ",coun),
+    x = "Year"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y.left = element_text(size = 10),  
+    axis.text.y.right = element_text(size = 10), 
+    axis.text.x = element_text(size = 10),       
+    axis.title.y.left = element_text(size = 12), 
+    axis.title.y.right = element_text(size = 12),
+    plot.title = element_text(size = 14, face = "bold"), 
+    legend.position = "bottom",                  
+    legend.title = element_text(size = 12),      
+    legend.text = element_text(size = 10)        
+  )
+```
+```{r}
+
+
+coun <- "Slovenia"
+
+data_us <- data_median |>
+  filter(country == coun) |>
+  select(year, gini, gdp) |>
+  arrange(year) 
+
+
+data_us <- data_us |>
+  mutate(
+    year_diff = year - lag(year),
+    gdp_growth = ifelse(
+      !is.na(year_diff) & year_diff > 0,  
+      (gdp / lag(gdp))^(1 / year_diff) * 100 - 100,  
+      NA 
+    )
+  ) |>
+  select(-year_diff) 
+
+
+ggplot(data_us, aes(x = year)) +
+  geom_line(aes(y = gini, color = "Gini Index"), size = 1) +
+  geom_point(aes(y = gini, color = "Gini Index"), size = 2) +
+  geom_line(aes(y = gdp_growth, color = "GDP Growth"), size = 1) +
+  geom_point(aes(y = gdp_growth, color = "GDP Growth"), size = 2) +
+  scale_y_continuous(
+    name = "Gini Index", 
+    sec.axis = sec_axis(~ ., name = "GDP Growth (%)")  
+  ) +
+  scale_color_manual(
+    name = "Indicator",
+    values = c("Gini Index" = "blue", "GDP Growth" = "red")
+  ) +
+  labs(
+    title = paste("GDP Growth and Gini Index Over Years for ",coun),
+    x = "Year"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y.left = element_text(size = 10),  
+    axis.text.y.right = element_text(size = 10), 
+    axis.text.x = element_text(size = 10),       
+    axis.title.y.left = element_text(size = 12), 
+    axis.title.y.right = element_text(size = 12),
+    plot.title = element_text(size = 14, face = "bold"), 
+    legend.position = "bottom",                  
+    legend.title = element_text(size = 12),      
+    legend.text = element_text(size = 10)        
+  )
+```
