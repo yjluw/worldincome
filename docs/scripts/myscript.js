@@ -28,7 +28,7 @@ function processData(data, year) {
     }));
 }
 
-d3.json("../gini_data.json")
+d3.json("gini_data.json")
   .then(function(rawData) {
     console.log("Data loaded successfully:", rawData);
     // Continue with your processing...
@@ -39,7 +39,7 @@ d3.json("../gini_data.json")
   
 
 // Load your data
-d3.json("../gini_data.json").then(function(rawData) {
+d3.json("gini_data.json").then(function(rawData) {
     // Get unique years
     const years = [...new Set(rawData.map(d => d.year))].sort();
 
