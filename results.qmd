@@ -534,59 +534,7 @@ ggplot(data_US_long, aes(x = factor(year))) +
 
 ```
 
-## **Yijian 3**
 
-```{r, fig.width=15, fig.height=15, warning=FALSE}
-data_gini_all_year <- data |> filter(country != 'United Satates', resource != 'Incasdome (gross)')
-
-data_gini_all_year <- data_gini_all_year %>%
-  group_by(country, year) %>%
-  arrange(desc(!is.na(gini)),
-          desc(!is.na(q1)),
-          desc(popcovr == "All"),
-          resource == "Earnings") %>%
-  slice(1) %>%
-  ungroup()
-data_gini_2022 <- data_gini_all_year |> filter(year == 2016)
-
-
-# Data frame with Gini Index
-data_gini <- data.frame(
-  country = data_gini_2022$country,
-  gini = data_gini_2022$gini,
-  c3 = data_gini_2022$c3,
-  postal = data_gini_2022$c2
-)
-
-
-# Get world map data
-world <- ne_countries(scale = "medium", returnclass = "sf")
-
-# Rename `name_long` to `country` for matching and join
-world <- world %>%
-  mutate(c3 = su_a3) %>% # Create a new column named `country`
-  mutate(country = name_long) %>%
-  left_join(data_gini, by = "c3") # Perform the join
-
-ggplot(data = world) +
-  geom_sf(aes(fill = gini), color = "black", size = 0.2) +
-  scale_fill_distiller(
-    palette = "RdYlGn",  # Red-Yellow-Green gradient
-    direction = -1,      # Reverse to make it Green-to-Red
-    na.value = "gray90"  # Color for missing values
-  ) +
-  theme_minimal() +
-  labs(
-    title = "Gini Index by Country",
-    fill = "Gini Index"
-  ) +
-  theme(
-    plot.title = element_text(hjust = 0.5),
-    axis.text = element_blank(),
-    axis.ticks = element_blank()
-  )
-
-```
 
 ## **What potential factors could indicate a country's income inequality?**
 
@@ -634,11 +582,10 @@ data_GDP_2020$gini_type <- factor(data_GDP_2020$gini_type,
 vcd::mosaic(gini_type ~ gdp_growth_speed + developed, 
             data = data_GDP_2020, 
             labeling_args = list(
-              gp_labels = gpar(fontsize = 9) # Set font size
+              gp_labels = gpar(fontsize = 9) # Set font size for labels
             ),
             highlighting_fill = c("lightgreen", "lightgoldenrod", "lightcoral"),
-            labeling = vcd::labeling_border(rot_labels = c(45, -45, 0, 0)),
-            main = "Mosaic Plot: GDP Class, Developed Status, and Gini Type")
+            main = "Gini Classify by GDP and Development")
 ```
 
 
@@ -758,10 +705,26 @@ The Gini coefficient is a widely used metric to measure income inequality within
 
 ```{r}
 
-# Assuming your dataset is called `data_gini_all_year`
-# Structure: country, year, gini, c3 (ISO3 code for countries)
+data_gini_all_year <- data %>%
+  group_by(country, year) %>%
+  arrange(desc(!is.na(gini)),
+          desc(!is.na(q1)),
+          desc(popcovr == "All"),
+          resource == "Earnings") %>%
+  slice(1) %>%
+  ungroup()
+data_gini_2022 <- data_gini_all_year |> filter(year == 2016)
 
-# Step 1: Get the list of all unique countries and years
+
+# Data frame with Gini Index
+data_gini <- data.frame(
+  country = data_gini_2022$country,
+  gini = data_gini_2022$gini,
+  c3 = data_gini_2022$c3,
+  postal = data_gini_2022$c2
+)
+
+
 all_countries <- unique(data_gini_all_year$country)
 all_years <- seq(1950, 2021)
 
