@@ -29,4 +29,5 @@ format:
     theme: cosmo
     code-fold: true
 
-
+resources:
+  - gini_data.json

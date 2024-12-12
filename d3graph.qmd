@@ -1,10 +1,17 @@
 # Interactive graph
 
 <style>
-  * {
-    font-family: sans-serif;
-  }
-</style> 
+    .bar-label {
+        fill: black;
+        text-anchor: middle;
+    }
+    .slider-label {
+        font-size: 14px;
+    }
+    .bar:hover {
+        opacity: 0.8;
+    }
+</style>
 
 <div id="plot">
 </div>
