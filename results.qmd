@@ -588,7 +588,7 @@ ggplot(data = world) +
 
 ```
 
-## Yijian 4: What potential factors could indicate a country's income inequality?
+## What potential factors could indicate a country's income inequality?
 
 This mosaic plot shows the proportion of each gini index type for developed and developing countries, further categorized by their GDP growth rates. GDP growth rate does not appear to have a direct relationship with a country’s income inequality, as represented by the Gini index. Countries with low, medium, and high GDP growth rates exhibit similar distributions across the different Gini categories. On the other hand, a country's level of development can be a critical factor influencing income inequality. Developed countries generally experience less severe income inequality, as shown in the graph, where almost no developed country falls within the high Gini index category. Instead, developed nations are mostly characterized by low or medium Gini indices.
 
@@ -640,6 +640,13 @@ vcd::mosaic(gini_type ~ gdp_growth_speed + developed,
             labeling = vcd::labeling_border(rot_labels = c(45, -45, 0, 0)),
             main = "Mosaic Plot: GDP Class, Developed Status, and Gini Type")
 ```
+
+
+#### The Transition of Countries Across Gini Groups Over Time
+
+The Alluvial plot highlights how countries flow through three different periods: `1990-2000`,`2000`-`2010` and `2010-2022`. So we can see the mobility of the countries in gini categories.
+
+From the Plot, we can see most countries stay in one categories for three periods, which means most countries with high gini in `1990-2000` were still with high gini in `2000-2010` and `2010-2022`, which  indicates the general stability of the gini and the difficulty of improving income inequality. However, there are still some countries with high gini in `1990-2000` ending in low and mid gini group in `2010-2022`. And there are no countries with low gini in `1990-2010` ending in high gini group in `2010-2022` while there are very few countries with mid gini in `1990-2000` ending in high gini group in `2010-2022`. That means countries having less serious income inequality have been doing well in controlling the income inequality and not letting the problem worse.
 
 ```{r, fig.width=6, fig.height=6, warning=FALSE, message=FALSE}
 data_GDP <- data |>
