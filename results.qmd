@@ -15,6 +15,7 @@ library(plotly)
 library(vcd)
 library(ggrepel)
 library(patchwork)
+library(ggalluvial)
 
 
 knitr::opts_chunk$set(
@@ -640,10 +641,7 @@ vcd::mosaic(gini_type ~ gdp_growth_speed + developed,
             main = "Mosaic Plot: GDP Class, Developed Status, and Gini Type")
 ```
 
-```{r}
-library(ggalluvial)
-
-
+```{r, fig.width=6, fig.height=6, warning=FALSE, message=FALSE}
 data_GDP <- data |>
   group_by(country, year) |>        
   arrange(desc(!is.na(gini)),          
@@ -724,6 +722,25 @@ ggplot(alluvial_data, aes(axis1 = `1990-2000`, axis2 = `2000-2010`, axis3 = `201
   )
 
 ```
+```{r,include=FALSE}
+# Using the same data preparation as before
+data_for_json <- data_GDP |>
+  # Keep only necessary columns
+  select(year, country, gini) |>
+  # Order for cleaner data
+  arrange(year, country)
+
+# select data from year 1992 to 2021
+data_for_json <- data_for_json |>
+  filter(year >= 1992 & year <= 2021)
+# Convert to JSON
+library(jsonlite)
+json_data <- toJSON(data_for_json, pretty = TRUE)
+
+# Write to file
+write(json_data, "gini_data.json")
+```
+
 
 ## Yijian Plotly: How has income inequality (Gini index) been distributed and changing around the world?
 
