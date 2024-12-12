@@ -642,11 +642,13 @@ vcd::mosaic(gini_type ~ gdp_growth_speed + developed,
 ```
 
 
-#### The Transition of Countries Across Gini Groups Over Time
+## The Transition of Countries Across Gini Groups Over Time
 
 The Alluvial plot highlights how countries flow through three different periods: `1990-2000`,`2000`-`2010` and `2010-2022`. So we can see the mobility of the countries in gini categories.
 
-From the Plot, we can see most countries stay in one categories for three periods, which means most countries with high gini in `1990-2000` were still with high gini in `2000-2010` and `2010-2022`, which  indicates the general stability of the gini and the difficulty of improving income inequality. However, there are still some countries with high gini in `1990-2000` ending in low and mid gini group in `2010-2022`. And there are no countries with low gini in `1990-2010` ending in high gini group in `2010-2022` while there are very few countries with mid gini in `1990-2000` ending in high gini group in `2010-2022`. That means countries having less serious income inequality have been doing well in controlling the income inequality and not letting the problem worse.
+From the Plot, we can see most countries stay in one categories for three periods, which means most countries with high gini in `1990-2000` were still with high gini in `2000-2010` and `2010-2022`, which  indicates the general stability of the gini and the difficulty of improving income inequality. However, there are still some countries with high gini in `1990-2000` ending in low and mid gini group in `2010-2022`. And there are no countries with low gini in `1990-2010` ending in high gini group in `2010-2022` while there are very few countries with mid gini in `1990-2000` ending in high gini group in `2010-2022`. This further shows that countries with less income inequality have performed well in preventing the problem from getting worse.
+
+Overall, this chart reflects the overall stability of the Gini coefficient and the significant efforts of some countries to reduce income inequality, while also highlighting the success of countries that originally had less income inequality in maintaining stability
 
 ```{r, fig.width=6, fig.height=6, warning=FALSE, message=FALSE}
 data_GDP <- data |>
