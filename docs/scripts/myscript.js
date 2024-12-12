@@ -28,7 +28,7 @@ function processData(data, year) {
     }));
 }
 
-d3.json("gini_data.json")
+d3.json("../gini_data.json")
   .then(function(rawData) {
     console.log("Data loaded successfully:", rawData);
     // Continue with your processing...
