@@ -396,7 +396,7 @@ This visualization highlights two key stories in global inequality over the past
 
 Overall, these patterns challenge the assumption that higher income levels automatically lead to less inequality. Instead, the distribution of income appears more influenced by domestic policies, institutions, and social choices than by economic status alone.
 
-## Yijian 1: Do major economic events have an effect on the income distribution of the country?
+## **Do major economic events have an effect on the income distribution of the country?**
 
 The following two graphs show the share of total GDP accounted for by each 20% population group, divided by income, from 1970 to 2022. The bottom blue line in each graph represents the GDP growth rate for the corresponding year. From Brazil’s graph, we observe that the top 20% income group accounted for over 60% of the country’s total GDP prior to 1994. Additionally, both GDP distribution and growth rates showed significant annual fluctuations. After the introduction of the new currency, the Brazilian Real, the income share of the bottom 20% gradually increased, GDP growth rate fluctuations reduced, and income inequality in the country began to alleviate.
 
@@ -465,7 +465,7 @@ ggplot(data_US_long, aes(x = factor(year))) +
 
 ```
 
-## Yijian 2
+## **Yijian 2**
 
 Compared to Brazil, the United States shows a significantly more stable income distribution. Over the past fifty years, there have been no substantial fluctuations in the income share of each quantile group, except for a steady increase in the share of the highest income group (represented by the blue q5 bar), which aligns with the gradually rising Gini coefficient in the United States. Even during major financial events such as the 2008 financial crisis, the income distribution in the U.S. remained largely unchanged. This stability may be attributed to the relatively consistent economic growth trajectory in the U.S. (represented by the dark blue GDP growth curve), where even significant economic events have not caused large fluctuations to the GDP growth rate.
 
@@ -534,7 +534,7 @@ ggplot(data_US_long, aes(x = factor(year))) +
 
 ```
 
-## Yijian 3
+## **Yijian 3**
 
 ```{r, fig.width=15, fig.height=15, warning=FALSE}
 data_gini_all_year <- data |> filter(country != 'United Satates', resource != 'Incasdome (gross)')
@@ -588,7 +588,7 @@ ggplot(data = world) +
 
 ```
 
-## What potential factors could indicate a country's income inequality?
+## **What potential factors could indicate a country's income inequality?**
 
 This mosaic plot shows the proportion of each gini index type for developed and developing countries, further categorized by their GDP growth rates. GDP growth rate does not appear to have a direct relationship with a country’s income inequality, as represented by the Gini index. Countries with low, medium, and high GDP growth rates exhibit similar distributions across the different Gini categories. On the other hand, a country's level of development can be a critical factor influencing income inequality. Developed countries generally experience less severe income inequality, as shown in the graph, where almost no developed country falls within the high Gini index category. Instead, developed nations are mostly characterized by low or medium Gini indices.
 
@@ -642,7 +642,8 @@ vcd::mosaic(gini_type ~ gdp_growth_speed + developed,
 ```
 
 
-## The Transition of Countries Across Gini Groups Over Time
+
+## **The Transition of Countries Across Gini Groups Over Time**
 
 The Alluvial plot highlights how countries flow through three different periods: `1990-2000`,`2000`-`2010` and `2010-2022`. So we can see the mobility of the countries in gini categories.
 
@@ -751,7 +752,7 @@ write(json_data, "gini_data.json")
 ```
 
 
-## Yijian Plotly: How has income inequality (Gini index) been distributed and changing around the world?
+## **How has income inequality (Gini index) been distributed and changing around the world?**
 
 The Gini coefficient is a widely used metric to measure income inequality within a group of population, ranging from 0 to 1, where 1 represents absolute income inequality and 0 represents absolute income equality. From this interactive graph, we can observe that the Gini coefficient varies significantly across countries worldwide. The areas with lighter color represent high Gini values, indicating severe income inequality. Due to the lack of comprehensive global data, it is challenging to identify clear trends in global Gini. However, we can observe trends for individual countries. For example, in the United States and most European countries, the Gini coefficient has not shown significant changes over the last 50 years. In contrast, for Asian countries such as China and India, the Gini coefficient has exhibited an upward trend over the past 20 years, as reflected in the gradually lighter changing colors.
 
@@ -820,7 +821,7 @@ fig
 
 ```
 
-## Xiaojiang 1 How Gini of countries has been changed from 1950-2000 to 2000-2022
+## **How Gini of countries has been changed from 1950-2000 to 2000-2022**
 
 This Cleveland plot shows average gini for countries in two periods:`1950-2000` and `2000-2022`. The average Gini of each country is calculated using the available Gini index of each year during that period. This plot captures the trends in income inequality across countries over time. Blue dots represent the Gini in period `2000-2022` and red dots represent the Gini in period `1950-2000`. The link linking the two points indicates a change of gini from `1950-2000` to `2000-2022` so a longer line means a bigger change happening over time.
 
@@ -879,7 +880,7 @@ Some countries remain high `Gini` in these two periods including `South Africa`,
 
 At the end when looking at the pattern more broadly, across all countries, there more countries having Gini dramatically decreased or remaining stable compared to those encountering huge increase in Gini. So it reflects most countries did well in controlling the income inequality.
 
-## Xiaojiang 2 How Gini of Top and bottom 5 Countries by GDP in Each Region evlovs through time
+## **How Gini of Top and bottom 5 Countries by GDP in Each Region evlovs through time**
 
 Seeing the gini index for two periods, we want to see if `region` will influence the change of gini over time. Considering huge amount of countries in each region, we decide to sample the 5 countries with the highest GDP and the lowest GDP in each region.
 
@@ -1011,7 +1012,7 @@ From the plot,
 
 4.  Some countries which is not developed has encountered a problem of increasing income inequality when they were trying to develop their economic. In Africa, Gini of countries like `Malawi` and Mozambique all increased after some period. This phenomena is associated with their economic growth and introduction of foreign investment. In Asia, `China` has done well in reducing income inequality from `1960-1980` but the situations worsened after 1980 which match's the period when `China` decided to develop its economic according to some newly published policy. In Europe, Gini of `Albania` has increased during `Albania`'s economic transition which means the transition from a planned to a market economy had a negative impact on income equality.
 
-## Xiaojiang 3 Explore GDP growth and Gini in some countries
+## **Explore GDP growth and Gini in some countries**
 
 Previous explorations stimulated our curiosity of the relationship between GDP growth and Gini. So here we decide to take a closer look at some representative countries.
 
